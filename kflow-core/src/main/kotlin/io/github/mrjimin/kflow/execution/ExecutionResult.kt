@@ -1,4 +1,3 @@
-
 package io.github.mrjimin.kflow.execution
 
 import kotlin.time.Duration
@@ -21,7 +20,9 @@ data class ExecutionResult<T>(
 
     fun getOrThrow(): T {
         if (isFailure) {
-            throw error ?: IllegalStateException("Workflow execution failed: $workflowName")
+            throw error ?: IllegalStateException(
+                "Workflow execution failed: $workflowName"
+            )
         }
 
         @Suppress("UNCHECKED_CAST")
@@ -34,12 +35,11 @@ data class ExecutionResult<T>(
     fun exceptionOrNull(): Throwable? =
         if (isFailure) error else null
 
-    fun <R> fold(
+    inline fun <R> fold(
         onSuccess: (T?) -> R,
         onFailure: (Throwable?) -> R
-    ): R = if (successful) {
-        onSuccess(value)
-    } else {
-        onFailure(error)
+    ): R = when (status) {
+        ExecutionStatus.SUCCESS -> onSuccess(value)
+        ExecutionStatus.FAILED -> onFailure(error)
     }
 }

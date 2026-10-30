@@ -8,4 +8,11 @@ data class StepExecution(
     val duration: Duration,
     val attempt: Int = 1,
     val error: Throwable? = null
-)
+) {
+
+    val successful: Boolean
+        get() = status == ExecutionStatus.SUCCESS
+
+    val isFailure: Boolean
+        get() = status == ExecutionStatus.FAILED
+}

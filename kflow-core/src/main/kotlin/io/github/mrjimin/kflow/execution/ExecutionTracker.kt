@@ -86,12 +86,13 @@ internal class ExecutionTracker(
             error = error
         )
 
-        listeners.forEach { listener ->
+        for (listener in listeners) {
             try {
                 listener.onEvent(event)
             } catch (exception: CancellationException) {
                 throw exception
             } catch (_: Exception) {
+                continue
             }
         }
     }
