@@ -1,0 +1,12 @@
+package io.github.mrjimin.kflow.execution
+
+import kotlin.time.Duration
+
+data class WorkflowEvent(
+    val executionId: String,
+    val workflowName: String,
+    val type: WorkflowEventType,
+    val stepName: String? = null,
+    val duration: Duration? = null,
+    val error: Throwable? = null
+)
