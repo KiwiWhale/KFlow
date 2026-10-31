@@ -3,6 +3,7 @@ package io.github.mrjimin.kflow.spring.factory
 import io.github.mrjimin.kflow.annotation.Step
 import io.github.mrjimin.kflow.annotation.Workflow
 import kotlinx.coroutines.runBlocking
+import org.springframework.core.annotation.AnnotatedElementUtils
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -21,7 +22,19 @@ class SpringWorkflowFactoryTest {
 
     @Test
     fun `Spring Bean으로 Workflow를 생성한다`() = runBlocking {
-        val workflow = factory.create(TestWorkflow())
+        val instance = TestWorkflow()
+
+        val annotation = requireNotNull(
+            AnnotatedElementUtils.findMergedAnnotation(
+                TestWorkflow::class.java,
+                Workflow::class.java
+            )
+        )
+
+        val workflow = factory.create(
+            instance = instance,
+            annotation = annotation
+        )
 
         assertEquals(
             "HELLO",

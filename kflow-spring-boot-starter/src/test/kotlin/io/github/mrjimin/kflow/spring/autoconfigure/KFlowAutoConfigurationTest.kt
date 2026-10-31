@@ -44,4 +44,22 @@ class KFlowAutoConfigurationTest {
                 )
             }
     }
+
+    @Test
+    fun `사용자 정의 SpringWorkflowFactory를 유지한다`() {
+        val customFactory = SpringWorkflowFactory()
+
+        contextRunner
+            .withBean(
+                "customSpringWorkflowFactory",
+                SpringWorkflowFactory::class.java,
+                { customFactory }
+            )
+            .run { context ->
+                kotlin.test.assertSame(
+                    customFactory,
+                    context.getBean<SpringWorkflowFactory>()
+                )
+            }
+    }
 }

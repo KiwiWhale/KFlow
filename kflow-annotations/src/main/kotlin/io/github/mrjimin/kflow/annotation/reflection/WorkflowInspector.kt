@@ -15,9 +15,16 @@ internal class WorkflowInspector(
         val annotation = kClass.findAnnotation<Workflow>()
             ?: throw InvalidWorkflowException(
                 kClass.simpleName ?: "Anonymous",
-                "Class must be annotated with @WorkflowSpec."
+                "Class must be annotated with @Workflow."
             )
 
+        return inspect(kClass, annotation)
+    }
+
+    fun inspect(
+        kClass: KClass<*>,
+        annotation: Workflow
+    ): WorkflowMetadata {
         val workflowName = annotation.name.ifBlank {
             kClass.simpleName ?: "AnonymousWorkflow"
         }

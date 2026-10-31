@@ -13,11 +13,13 @@ class KFlowAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    fun workflowRegistry() = WorkflowRegistry()
+    fun workflowRegistry(): WorkflowRegistry =
+        WorkflowRegistry()
 
     @Bean
     @ConditionalOnMissingBean
-    fun springWorkflowFactory() = SpringWorkflowFactory()
+    fun springWorkflowFactory(): SpringWorkflowFactory =
+        SpringWorkflowFactory()
 
     @Bean
     @ConditionalOnMissingBean
@@ -25,9 +27,10 @@ class KFlowAutoConfiguration {
         applicationContext: ApplicationContext,
         factory: SpringWorkflowFactory,
         registry: WorkflowRegistry
-    ) = KFlowBeanRegistrar(
-        applicationContext = applicationContext,
-        factory = factory,
-        registry = registry
-    )
+    ): KFlowBeanRegistrar =
+        KFlowBeanRegistrar(
+            applicationContext = applicationContext,
+            factory = factory,
+            registry = registry
+        )
 }

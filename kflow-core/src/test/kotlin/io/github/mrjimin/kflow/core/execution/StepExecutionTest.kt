@@ -1,7 +1,5 @@
 package io.github.mrjimin.kflow.core.execution
 
-import io.github.mrjimin.kflow.core.execution.ExecutionStatus
-import io.github.mrjimin.kflow.core.execution.StepExecution
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull

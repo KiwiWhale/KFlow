@@ -1,10 +1,7 @@
 package io.github.mrjimin.kflow.spring.registry
 
-import io.github.mrjimin.kflow.KFlow
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
-import kotlin.test.assertTrue
+import io.github.mrjimin.kflow.core.KFlow
+import kotlin.test.*
 
 class WorkflowRegistryTest {
 
@@ -43,6 +40,22 @@ class WorkflowRegistryTest {
     }
 
     @Test
+    fun `getOrNull로 등록된 Workflow를 조회한다`() {
+        val workflow = KFlow.workflow<String, String>("TestWorkflow") {
+            input
+        }
+
+        registry.register("TestWorkflow", workflow)
+
+        assertEquals(workflow, registry.getOrNull("TestWorkflow"))
+    }
+
+    @Test
+    fun `등록되지 않은 Workflow를 getOrNull로 조회하면 null을 반환한다`() {
+        assertNull(registry.getOrNull("Unknown"))
+    }
+
+    @Test
     fun `등록된 Workflow 이름을 조회한다`() {
         val workflow = KFlow.workflow<String, String>("TestWorkflow") {
             input
@@ -62,5 +75,36 @@ class WorkflowRegistryTest {
         assertFailsWith<IllegalArgumentException> {
             registry.register("", workflow)
         }
+    }
+
+    @Test
+    fun `공백 이름으로 Workflow를 등록하면 예외가 발생한다`() {
+        val workflow = KFlow.workflow<String, String>("TestWorkflow") {
+            input
+        }
+
+        assertFailsWith<IllegalArgumentException> {
+            registry.register("   ", workflow)
+        }
+    }
+
+    @Test
+    fun `names는 등록 시점의 Snapshot을 반환한다`() {
+        val first = KFlow.workflow<String, String>("First") {
+            input
+        }
+
+        val second = KFlow.workflow<String, String>("Second") {
+            input
+        }
+
+        registry.register("First", first)
+
+        val names = registry.names()
+
+        registry.register("Second", second)
+
+        assertEquals(setOf("First"), names)
+        assertEquals(setOf("First", "Second"), registry.names())
     }
 }

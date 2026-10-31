@@ -4,7 +4,7 @@ import io.github.mrjimin.kflow.annotation.Retry
 import io.github.mrjimin.kflow.annotation.Step
 import io.github.mrjimin.kflow.annotation.Workflow
 import io.github.mrjimin.kflow.annotation.factory.AnnotatedWorkflowFactory
-import io.github.mrjimin.kflow.policy.RetryJitter
+import io.github.mrjimin.kflow.core.policy.RetryJitter
 import kotlinx.coroutines.runBlocking
 
 data class PaymentRequest(

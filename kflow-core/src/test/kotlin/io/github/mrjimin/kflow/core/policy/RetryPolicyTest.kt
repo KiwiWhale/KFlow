@@ -1,6 +1,5 @@
 package io.github.mrjimin.kflow.core.policy
 
-import io.github.mrjimin.kflow.core.policy.RetryPolicy
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith

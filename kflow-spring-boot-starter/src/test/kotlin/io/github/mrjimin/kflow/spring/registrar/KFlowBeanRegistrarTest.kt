@@ -19,15 +19,56 @@ class KFlowBeanRegistrarTest {
         fun execute(input: String) = input
     }
 
+    @Target(AnnotationTarget.CLASS)
+    @Retention(AnnotationRetention.RUNTIME)
+    @Workflow(name = "MetaWorkflow")
+    annotation class MetaWorkflow
+
+    @MetaWorkflow
+    class MetaTestWorkflow {
+
+        @Step
+        fun execute(input: String) = "Meta $input"
+    }
+
     @Test
     fun `Workflow 어노테이션이 있는 Bean을 자동 등록한다`() {
+        val context = createContext {
+            TestWorkflow()
+        }
+
+        context.use {
+            val registry = it.getBean(WorkflowRegistry::class.java)
+
+            assertTrue(registry.contains("TestWorkflow"))
+            assertEquals(setOf("TestWorkflow"), registry.names())
+        }
+    }
+
+    @Test
+    fun `Meta-annotation으로 선언된 Workflow도 자동 등록한다`() {
+        val context = createContext {
+            MetaTestWorkflow()
+        }
+
+        context.use {
+            val registry = it.getBean(WorkflowRegistry::class.java)
+
+            assertTrue(registry.contains("MetaWorkflow"))
+            assertEquals(setOf("MetaWorkflow"), registry.names())
+        }
+    }
+
+    private fun createContext(
+        workflowProvider: () -> Any
+    ): AnnotationConfigApplicationContext {
         val context = AnnotationConfigApplicationContext()
 
         val registry = WorkflowRegistry()
         val factory = SpringWorkflowFactory()
 
         context.registerBean("testWorkflow") {
-            TestWorkflow()
+            workflowProvider()
         }
 
         context.registerBean {
@@ -48,12 +89,6 @@ class KFlowBeanRegistrarTest {
 
         context.refresh()
 
-        context.use {
-            assertTrue(registry.contains("TestWorkflow"))
-            assertEquals(
-                setOf("TestWorkflow"),
-                registry.names()
-            )
-        }
+        return context
     }
 }

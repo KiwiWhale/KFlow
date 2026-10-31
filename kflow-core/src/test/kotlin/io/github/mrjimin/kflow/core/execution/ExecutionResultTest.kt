@@ -2,7 +2,6 @@ package io.github.mrjimin.kflow.core.execution
 
 import io.github.mrjimin.kflow.core.KFlow
 import io.github.mrjimin.kflow.core.exception.WorkflowExecutionException
-import io.github.mrjimin.kflow.core.execution.ExecutionStatus
 import kotlinx.coroutines.test.runTest
 import kotlin.test.*
 

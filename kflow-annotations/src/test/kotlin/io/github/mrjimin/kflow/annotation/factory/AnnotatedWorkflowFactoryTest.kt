@@ -3,7 +3,7 @@ package io.github.mrjimin.kflow.annotation.factory
 import io.github.mrjimin.kflow.annotation.Step
 import io.github.mrjimin.kflow.annotation.Workflow
 import io.github.mrjimin.kflow.annotation.exception.InvalidWorkflowException
-import io.github.mrjimin.kflow.workflow.KFlowWorkflow
+import io.github.mrjimin.kflow.core.workflow.KFlowWorkflow
 import kotlin.test.Test
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull

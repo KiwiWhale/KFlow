@@ -2,9 +2,9 @@ package io.github.mrjimin.kflow.spring
 
 import io.github.mrjimin.kflow.annotation.Step
 import io.github.mrjimin.kflow.annotation.Workflow
+import io.github.mrjimin.kflow.core.workflow.KFlowWorkflow
 import io.github.mrjimin.kflow.spring.annotation.EnableKFlow
 import io.github.mrjimin.kflow.spring.registry.WorkflowRegistry
-import io.github.mrjimin.kflow.workflow.KFlowWorkflow
 import kotlinx.coroutines.runBlocking
 import org.springframework.beans.factory.getBean
 import org.springframework.boot.SpringBootConfiguration
@@ -45,6 +45,28 @@ class KFlowSpringIntegrationTest {
         }
     }
 
+    @Test
+    fun `Meta-annotation으로 선언된 Workflow도 자동 등록된다`() {
+        contextRunner
+            .withUserConfiguration(MetaWorkflowConfiguration::class.java)
+            .run { context ->
+                val registry = context.getBean<WorkflowRegistry>()
+
+                assertTrue(registry.contains("MetaWorkflow"))
+            }
+    }
+
+    @Test
+    fun `Workflow 이름이 비어 있으면 클래스 이름으로 등록된다`() {
+        contextRunner
+            .withUserConfiguration(DefaultNameConfiguration::class.java)
+            .run { context ->
+                val registry = context.getBean<WorkflowRegistry>()
+
+                assertTrue(registry.contains("DefaultNameWorkflow"))
+            }
+    }
+
     @SpringBootConfiguration
     @EnableKFlow
     class TestApplication {
@@ -53,12 +75,51 @@ class KFlowSpringIntegrationTest {
         fun testWorkflow() = TestWorkflow()
     }
 
+    @SpringBootConfiguration
+    @EnableKFlow
+    class MetaWorkflowConfiguration {
+
+        @Bean
+        fun metaTestWorkflow() = MetaTestWorkflow()
+    }
+
+    @SpringBootConfiguration
+    @EnableKFlow
+    class DefaultNameConfiguration {
+
+        @Bean
+        fun defaultNameWorkflow() = DefaultNameWorkflow()
+    }
+
     @Workflow(name = "TestWorkflow")
     class TestWorkflow {
 
         @Step(order = 1)
         fun execute(input: String): String {
             return "Hello $input"
+        }
+    }
+
+    @Target(AnnotationTarget.CLASS)
+    @Retention(AnnotationRetention.RUNTIME)
+    @Workflow(name = "MetaWorkflow")
+    annotation class MetaWorkflow
+
+    @MetaWorkflow
+    class MetaTestWorkflow {
+
+        @Step(order = 1)
+        fun execute(input: String): String {
+            return "Meta $input"
+        }
+    }
+
+    @Workflow
+    class DefaultNameWorkflow {
+
+        @Step(order = 1)
+        fun execute(input: String): String {
+            return input
         }
     }
 }

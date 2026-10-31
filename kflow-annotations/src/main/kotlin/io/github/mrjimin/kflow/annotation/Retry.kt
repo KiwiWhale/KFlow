@@ -1,6 +1,6 @@
 package io.github.mrjimin.kflow.annotation
 
-import io.github.mrjimin.kflow.policy.RetryJitter
+import io.github.mrjimin.kflow.core.policy.RetryJitter
 
 @Target(AnnotationTarget.ANNOTATION_CLASS)
 @Retention(AnnotationRetention.RUNTIME)

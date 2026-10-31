@@ -1,6 +1,6 @@
 package io.github.mrjimin.kflow.example.dsl
 
-import io.github.mrjimin.kflow.KFlow
+import io.github.mrjimin.kflow.core.KFlow
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlin.time.Duration.Companion.milliseconds

@@ -1,6 +1,5 @@
 package io.github.mrjimin.kflow.core.context
 
-import io.github.mrjimin.kflow.core.context.WorkflowContext
 import kotlin.test.*
 
 class WorkflowContextTest {

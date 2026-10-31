@@ -1,6 +1,6 @@
 package io.github.mrjimin.kflow.annotation.metadata
 
-import io.github.mrjimin.kflow.policy.RetryPolicy
+import io.github.mrjimin.kflow.core.policy.RetryPolicy
 import kotlin.reflect.KFunction
 import kotlin.reflect.KParameter
 import kotlin.time.Duration

@@ -1,6 +1,6 @@
 package io.github.mrjimin.kflow.spring.registry
 
-import io.github.mrjimin.kflow.workflow.KFlowWorkflow
+import io.github.mrjimin.kflow.core.workflow.KFlowWorkflow
 import java.util.concurrent.ConcurrentHashMap
 
 class WorkflowRegistry {
@@ -25,6 +25,9 @@ class WorkflowRegistry {
         return workflows[name]
             ?: throw NoSuchElementException("Workflow '$name' is not registered.")
     }
+
+    fun getOrNull(name: String): KFlowWorkflow<*, *>? =
+        workflows[name]
 
     fun contains(name: String): Boolean =
         workflows.containsKey(name)

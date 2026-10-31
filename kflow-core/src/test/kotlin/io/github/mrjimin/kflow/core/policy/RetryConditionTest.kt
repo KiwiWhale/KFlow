@@ -1,8 +1,6 @@
 package io.github.mrjimin.kflow.core.policy
 
 import io.github.mrjimin.kflow.core.KFlow
-import io.github.mrjimin.kflow.core.policy.RetryCondition
-import io.github.mrjimin.kflow.core.policy.RetryPolicy
 import kotlinx.coroutines.test.runTest
 import java.io.IOException
 import kotlin.test.Test

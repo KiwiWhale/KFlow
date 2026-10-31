@@ -1,7 +1,7 @@
 package io.github.mrjimin.kflow.annotation.policy
 
 import io.github.mrjimin.kflow.annotation.Retry
-import io.github.mrjimin.kflow.policy.RetryPolicy
+import io.github.mrjimin.kflow.core.policy.RetryPolicy
 import kotlin.time.Duration.Companion.milliseconds
 
 internal object AnnotationPolicyMapper {
