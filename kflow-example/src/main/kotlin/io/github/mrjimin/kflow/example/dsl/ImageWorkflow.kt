@@ -25,7 +25,7 @@ data class ProcessedImage(
 
 class ImageService {
 
-    suspend fun validate(image: ImageFile): ImageFile {
+    fun validate(image: ImageFile): ImageFile {
         require(image.width > 0)
         require(image.height > 0)
         return image

@@ -27,10 +27,10 @@ class StepInvokerTest {
             input ?: "기본값"
 
         @Step
-        suspend fun suspendNoInput(): String = "비동기 완료"
+        fun suspendNoInput(): String = "비동기 완료"
 
         @Step
-        suspend fun suspendWithInput(input: String): String =
+        fun suspendWithInput(input: String): String =
             "$input 비동기 처리"
 
         @Step
