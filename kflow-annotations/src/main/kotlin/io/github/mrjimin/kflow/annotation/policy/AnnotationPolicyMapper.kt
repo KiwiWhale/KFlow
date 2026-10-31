@@ -1,12 +1,12 @@
 package io.github.mrjimin.kflow.annotation.policy
 
-import io.github.mrjimin.kflow.annotation.StepRetry
+import io.github.mrjimin.kflow.annotation.Retry
 import io.github.mrjimin.kflow.policy.RetryPolicy
 import kotlin.time.Duration.Companion.milliseconds
 
 internal object AnnotationPolicyMapper {
 
-    fun toRetryPolicy(annotation: StepRetry): RetryPolicy? {
+    fun toRetryPolicy(annotation: Retry): RetryPolicy? {
         if (annotation.maxAttempts == 1) {
             return null
         }

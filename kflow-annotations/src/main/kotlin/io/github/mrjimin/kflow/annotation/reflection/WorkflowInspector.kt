@@ -1,6 +1,6 @@
 package io.github.mrjimin.kflow.annotation.reflection
 
-import io.github.mrjimin.kflow.annotation.WorkflowSpec
+import io.github.mrjimin.kflow.annotation.Workflow
 import io.github.mrjimin.kflow.annotation.exception.InvalidWorkflowException
 import io.github.mrjimin.kflow.annotation.metadata.WorkflowMetadata
 import kotlin.reflect.KClass
@@ -12,7 +12,7 @@ internal class WorkflowInspector(
 ) {
 
     fun inspect(kClass: KClass<*>): WorkflowMetadata {
-        val annotation = kClass.findAnnotation<WorkflowSpec>()
+        val annotation = kClass.findAnnotation<Workflow>()
             ?: throw InvalidWorkflowException(
                 kClass.simpleName ?: "Anonymous",
                 "Class must be annotated with @WorkflowSpec."

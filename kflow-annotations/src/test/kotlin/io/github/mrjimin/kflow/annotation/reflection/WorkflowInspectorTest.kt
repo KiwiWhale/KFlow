@@ -1,7 +1,7 @@
 package io.github.mrjimin.kflow.annotation.reflection
 
 import io.github.mrjimin.kflow.annotation.Step
-import io.github.mrjimin.kflow.annotation.WorkflowSpec
+import io.github.mrjimin.kflow.annotation.Workflow
 import io.github.mrjimin.kflow.annotation.exception.InvalidWorkflowException
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -11,7 +11,7 @@ class WorkflowInspectorTest {
 
     private val inspector = WorkflowInspector()
 
-    @WorkflowSpec
+    @Workflow
     class DefaultWorkflow {
 
         @Step
@@ -21,7 +21,7 @@ class WorkflowInspectorTest {
         fun second() {}
     }
 
-    @WorkflowSpec(name = "custom-workflow")
+    @Workflow(name = "custom-workflow")
     class CustomWorkflow {
 
         @Step(order = 20)
@@ -31,7 +31,7 @@ class WorkflowInspectorTest {
         fun first() {}
     }
 
-    @WorkflowSpec
+    @Workflow
     class OrderedWorkflow {
 
         @Step(order = 2)
@@ -44,7 +44,7 @@ class WorkflowInspectorTest {
         fun first() {}
     }
 
-    @WorkflowSpec
+    @Workflow
     class DuplicateWorkflow {
 
         @Step(name = "duplicate")
@@ -54,7 +54,7 @@ class WorkflowInspectorTest {
         fun second() {}
     }
 
-    @WorkflowSpec
+    @Workflow
     class EmptyWorkflow
 
     class UnannotatedWorkflow {

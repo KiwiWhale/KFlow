@@ -1,7 +1,7 @@
 package io.github.mrjimin.kflow.annotation.metadata
 
 import io.github.mrjimin.kflow.annotation.Step
-import io.github.mrjimin.kflow.annotation.WorkflowSpec
+import io.github.mrjimin.kflow.annotation.Workflow
 import io.github.mrjimin.kflow.annotation.reflection.WorkflowInspector
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -10,7 +10,7 @@ import kotlin.test.assertSame
 
 class WorkflowMetadataCacheTest {
 
-    @WorkflowSpec
+    @Workflow
     class SampleWorkflow {
 
         @Step
@@ -20,7 +20,7 @@ class WorkflowMetadataCacheTest {
         fun second() {}
     }
 
-    @WorkflowSpec
+    @Workflow
     class AnotherWorkflow {
 
         @Step

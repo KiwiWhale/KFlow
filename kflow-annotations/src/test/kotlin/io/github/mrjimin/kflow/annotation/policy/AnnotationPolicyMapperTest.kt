@@ -1,6 +1,6 @@
 package io.github.mrjimin.kflow.annotation.policy
 
-import io.github.mrjimin.kflow.annotation.StepRetry
+import io.github.mrjimin.kflow.annotation.Retry
 import kotlin.test.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -9,7 +9,7 @@ class AnnotationPolicyMapperTest {
 
     @Test
     fun `최대 시도 횟수가 1이면 재시도 정책을 생성하지 않는다`() {
-        val annotation = StepRetry(
+        val annotation = Retry(
             maxAttempts = 1
         )
 
@@ -20,7 +20,7 @@ class AnnotationPolicyMapperTest {
 
     @Test
     fun `기본 재시도 설정으로 정책을 생성한다`() {
-        val annotation = StepRetry()
+        val annotation = Retry()
 
         val policy = AnnotationPolicyMapper.toRetryPolicy(annotation)
 
@@ -29,7 +29,7 @@ class AnnotationPolicyMapperTest {
 
     @Test
     fun `사용자 지정 재시도 설정으로 정책을 생성한다`() {
-        val annotation = StepRetry(
+        val annotation = Retry(
             maxAttempts = 5,
             initialDelayMillis = 200,
             maxDelayMillis = 5000,
@@ -43,7 +43,7 @@ class AnnotationPolicyMapperTest {
 
     @Test
     fun `최대 시도 횟수가 2이면 재시도 정책을 생성한다`() {
-        val annotation = StepRetry(
+        val annotation = Retry(
             maxAttempts = 2
         )
 
@@ -54,7 +54,7 @@ class AnnotationPolicyMapperTest {
 
     @Test
     fun `재시도 지연 시간이 0이어도 정책을 생성한다`() {
-        val annotation = StepRetry(
+        val annotation = Retry(
             maxAttempts = 3,
             initialDelayMillis = 0,
             maxDelayMillis = 0
@@ -67,7 +67,7 @@ class AnnotationPolicyMapperTest {
 
     @Test
     fun `최대 지연 시간과 초기 지연 시간이 같아도 정책을 생성한다`() {
-        val annotation = StepRetry(
+        val annotation = Retry(
             maxAttempts = 3,
             initialDelayMillis = 100,
             maxDelayMillis = 100

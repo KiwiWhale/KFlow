@@ -38,14 +38,14 @@ class ReflectionValidatorTest {
         @Step(timeoutMillis = -1)
         fun negativeTimeout() {}
 
-        @Step(retry = io.github.mrjimin.kflow.annotation.StepRetry(maxAttempts = 0))
+        @Step(retry = io.github.mrjimin.kflow.annotation.Retry(maxAttempts = 0))
         fun invalidAttempts() {}
 
-        @Step(retry = io.github.mrjimin.kflow.annotation.StepRetry(initialDelayMillis = -1))
+        @Step(retry = io.github.mrjimin.kflow.annotation.Retry(initialDelayMillis = -1))
         fun negativeInitialDelay() {}
 
         @Step(
-            retry = io.github.mrjimin.kflow.annotation.StepRetry(
+            retry = io.github.mrjimin.kflow.annotation.Retry(
                 initialDelayMillis = 100,
                 maxDelayMillis = 50
             )
@@ -53,21 +53,21 @@ class ReflectionValidatorTest {
         fun invalidMaxDelay() {}
 
         @Step(
-            retry = io.github.mrjimin.kflow.annotation.StepRetry(
+            retry = io.github.mrjimin.kflow.annotation.Retry(
                 multiplier = 0.5
             )
         )
         fun invalidMultiplier() {}
 
         @Step(
-            retry = io.github.mrjimin.kflow.annotation.StepRetry(
+            retry = io.github.mrjimin.kflow.annotation.Retry(
                 multiplier = Double.NaN
             )
         )
         fun nanMultiplier() {}
 
         @Step(
-            retry = io.github.mrjimin.kflow.annotation.StepRetry(
+            retry = io.github.mrjimin.kflow.annotation.Retry(
                 multiplier = Double.POSITIVE_INFINITY
             )
         )

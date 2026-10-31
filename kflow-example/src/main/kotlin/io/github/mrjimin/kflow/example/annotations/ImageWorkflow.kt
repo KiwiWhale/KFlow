@@ -1,7 +1,7 @@
 package io.github.mrjimin.kflow.example.annotations
 
 import io.github.mrjimin.kflow.annotation.Step
-import io.github.mrjimin.kflow.annotation.WorkflowSpec
+import io.github.mrjimin.kflow.annotation.Workflow
 import io.github.mrjimin.kflow.annotation.factory.AnnotatedWorkflowFactory
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
@@ -45,7 +45,7 @@ class ImageService {
     }
 }
 
-@WorkflowSpec(name = "ImageWorkflow")
+@Workflow(name = "ImageWorkflow")
 class ImageWorkflow(
     private val service: ImageService
 ) {

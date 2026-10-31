@@ -7,5 +7,5 @@ annotation class Step(
     val name: String = "",
     val order: Int = 0,
     val timeoutMillis: Long = 0L,
-    val retry: StepRetry = StepRetry()
+    val retry: Retry = Retry()
 )

@@ -1,7 +1,7 @@
 package io.github.mrjimin.kflow.annotation.factory
 
 import io.github.mrjimin.kflow.annotation.Step
-import io.github.mrjimin.kflow.annotation.WorkflowSpec
+import io.github.mrjimin.kflow.annotation.Workflow
 import io.github.mrjimin.kflow.annotation.exception.InvalidWorkflowException
 import io.github.mrjimin.kflow.workflow.Workflow
 import kotlin.test.Test
@@ -11,7 +11,7 @@ import kotlin.test.assertSame
 
 class AnnotatedWorkflowFactoryTest {
 
-    @WorkflowSpec
+    @Workflow
     class StringWorkflow {
 
         @Step(order = 1)
@@ -25,14 +25,14 @@ class AnnotatedWorkflowFactoryTest {
         }
     }
 
-    @WorkflowSpec(name = "custom-workflow")
+    @Workflow(name = "custom-workflow")
     class CustomWorkflow {
 
         @Step
         fun execute() {}
     }
 
-    @WorkflowSpec
+    @Workflow
     class EmptyWorkflow
 
     class UnannotatedWorkflow

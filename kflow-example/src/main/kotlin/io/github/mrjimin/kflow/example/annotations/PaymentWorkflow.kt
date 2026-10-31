@@ -1,8 +1,8 @@
 package io.github.mrjimin.kflow.example.annotations
 
 import io.github.mrjimin.kflow.annotation.Step
-import io.github.mrjimin.kflow.annotation.StepRetry
-import io.github.mrjimin.kflow.annotation.WorkflowSpec
+import io.github.mrjimin.kflow.annotation.Retry
+import io.github.mrjimin.kflow.annotation.Workflow
 import io.github.mrjimin.kflow.annotation.factory.AnnotatedWorkflowFactory
 import io.github.mrjimin.kflow.policy.RetryJitter
 import kotlinx.coroutines.runBlocking
@@ -35,14 +35,14 @@ class PaymentGateway {
     }
 }
 
-@WorkflowSpec(name = "PaymentWorkflow")
+@Workflow(name = "PaymentWorkflow")
 class PaymentWorkflow(
     private val gateway: PaymentGateway
 ) {
 
     @Step(
         order = 1,
-        retry = StepRetry(
+        retry = Retry(
             maxAttempts = 3,
             initialDelayMillis = 100,
             maxDelayMillis = 1000,

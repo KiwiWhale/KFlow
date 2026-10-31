@@ -1,7 +1,7 @@
 package io.github.mrjimin.kflow.annotation.reflection
 
 import io.github.mrjimin.kflow.annotation.Step
-import io.github.mrjimin.kflow.annotation.StepRetry
+import io.github.mrjimin.kflow.annotation.Retry
 import io.github.mrjimin.kflow.annotation.exception.InvalidStepException
 import kotlin.reflect.full.memberFunctions
 import kotlin.test.*
@@ -26,11 +26,11 @@ class StepInspectorTest {
         @Step(timeoutMillis = 0)
         fun noTimeout() {}
 
-        @Step(retry = StepRetry(maxAttempts = 1))
+        @Step(retry = Retry(maxAttempts = 1))
         fun noRetry() {}
 
         @Step(
-            retry = StepRetry(
+            retry = Retry(
                 maxAttempts = 5,
                 initialDelayMillis = 200,
                 maxDelayMillis = 5000,

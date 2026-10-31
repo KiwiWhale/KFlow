@@ -1,7 +1,7 @@
 package io.github.mrjimin.kflow.example.annotations
 
 import io.github.mrjimin.kflow.annotation.Step
-import io.github.mrjimin.kflow.annotation.WorkflowSpec
+import io.github.mrjimin.kflow.annotation.Workflow
 import io.github.mrjimin.kflow.annotation.factory.AnnotatedWorkflowFactory
 import kotlinx.coroutines.runBlocking
 
@@ -33,7 +33,7 @@ data class OrderResult(
     val trackingNumber: String
 )
 
-@WorkflowSpec(name = "OrderWorkflow")
+@Workflow(name = "OrderWorkflow")
 class OrderWorkflow {
 
     @Step(order = 1)

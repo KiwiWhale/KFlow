@@ -1,7 +1,7 @@
 package io.github.mrjimin.kflow.example.annotations
 
 import io.github.mrjimin.kflow.annotation.Step
-import io.github.mrjimin.kflow.annotation.WorkflowSpec
+import io.github.mrjimin.kflow.annotation.Workflow
 import io.github.mrjimin.kflow.annotation.factory.AnnotatedWorkflowFactory
 import kotlinx.coroutines.runBlocking
 
@@ -17,7 +17,7 @@ data class User(
     val nickname: String
 )
 
-@WorkflowSpec(name = "RegistrationWorkflow")
+@Workflow(name = "RegistrationWorkflow")
 class RegistrationWorkflow {
 
     @Step(order = 1)
