@@ -3,9 +3,11 @@ package io.github.mrjimin.kflow.spring.registrar
 import io.github.mrjimin.kflow.annotation.Workflow
 import io.github.mrjimin.kflow.spring.factory.SpringWorkflowFactory
 import io.github.mrjimin.kflow.spring.registry.WorkflowRegistry
+import org.springframework.aop.support.AopUtils
 import org.springframework.beans.factory.SmartInitializingSingleton
 import org.springframework.beans.factory.getBeansWithAnnotation
 import org.springframework.context.ApplicationContext
+import org.springframework.core.annotation.AnnotatedElementUtils
 
 class KFlowBeanRegistrar(
     private val applicationContext: ApplicationContext,
@@ -17,17 +19,21 @@ class KFlowBeanRegistrar(
         val beans = applicationContext.getBeansWithAnnotation<Workflow>()
 
         beans.forEach { (_, bean) ->
-            val annotation = bean.javaClass
-                .getAnnotation(Workflow::class.java)
-                ?: return@forEach
+            val targetClass = AopUtils.getTargetClass(bean)
+
+            val annotation = AnnotatedElementUtils.findMergedAnnotation(
+                targetClass,
+                Workflow::class.java
+            ) ?: return@forEach
 
             val name = annotation.name.ifBlank {
-                bean.javaClass.simpleName
+                targetClass.simpleName
             }
 
-            val workflow = factory.create<Any?, Any?>(bean)
-
-            registry.register(name, workflow)
+            registry.register(
+                name = name,
+                workflow = factory.create(bean)
+            )
         }
     }
 }

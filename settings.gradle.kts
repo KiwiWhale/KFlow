@@ -3,6 +3,9 @@ pluginManagement {
         gradlePluginPortal()
         mavenCentral()
     }
+    plugins {
+        kotlin("plugin.spring") version "2.4.20"
+    }
 }
 
 plugins {
@@ -11,6 +14,7 @@ plugins {
 
 rootProject.name = "KFlow"
 
-include(":kflow-core")
-include(":kflow-annotations")
-include(":kflow-example")
+include("kflow-core")
+include("kflow-annotations")
+include("kflow-example")
+include("kflow-spring-boot-starter")

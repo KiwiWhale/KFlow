@@ -1,12 +1,14 @@
 package io.github.mrjimin.kflow.spring.factory
 
 import io.github.mrjimin.kflow.annotation.factory.AnnotatedWorkflowFactory
-import io.github.mrjimin.kflow.workflow.Workflow
+import io.github.mrjimin.kflow.workflow.KFlowWorkflow
+import org.springframework.aop.framework.AopProxyUtils
 
 class SpringWorkflowFactory {
 
-    @Suppress("UNCHECKED_CAST")
-    fun <I, O> create(instance: Any): Workflow<I, O> {
-        return AnnotatedWorkflowFactory.fromInstance<I, O>(instance)
+    fun create(instance: Any): KFlowWorkflow<Any?, Any?> {
+        val target = AopProxyUtils.getSingletonTarget(instance) ?: instance
+
+        return AnnotatedWorkflowFactory.fromInstance(target)
     }
 }
