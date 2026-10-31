@@ -1,6 +1,7 @@
 package io.github.mrjimin.kflow.annotation.factory
 
 import io.github.mrjimin.kflow.annotation.Workflow
+import io.github.mrjimin.kflow.annotation.metadata.WorkflowMetadata
 import io.github.mrjimin.kflow.annotation.metadata.WorkflowMetadataCache
 import io.github.mrjimin.kflow.annotation.reflection.StepInspector
 import io.github.mrjimin.kflow.annotation.reflection.StepInvoker
@@ -22,18 +23,42 @@ object AnnotatedWorkflowFactory {
 
     private val stepInvoker = StepInvoker()
 
-    fun <I, O> fromInstance(instance: Any): KFlowWorkflow<I, O> {
-        val metadata = metadataCache.get(instance.javaClass)
-
-        return create(instance, metadata)
+    fun <I, O> fromInstance(
+        instance: Any
+    ): KFlowWorkflow<I, O> {
+        return fromInstance(
+            instance = instance,
+            targetClass = instance.javaClass
+        )
     }
 
     fun <I, O> fromInstance(
         instance: Any,
         annotation: Workflow
     ): KFlowWorkflow<I, O> {
+        return fromInstance(
+            instance = instance,
+            annotation = annotation,
+            targetClass = instance.javaClass
+        )
+    }
+
+    fun <I, O> fromInstance(
+        instance: Any,
+        targetClass: Class<*>
+    ): KFlowWorkflow<I, O> {
+        val metadata = metadataCache.get(targetClass)
+
+        return create(instance, metadata)
+    }
+
+    fun <I, O> fromInstance(
+        instance: Any,
+        annotation: Workflow,
+        targetClass: Class<*>
+    ): KFlowWorkflow<I, O> {
         val metadata = metadataCache.get(
-            kClass = instance.javaClass,
+            kClass = targetClass,
             annotation = annotation
         )
 
@@ -42,7 +67,7 @@ object AnnotatedWorkflowFactory {
 
     private fun <I, O> create(
         instance: Any,
-        metadata: io.github.mrjimin.kflow.annotation.metadata.WorkflowMetadata
+        metadata: WorkflowMetadata
     ): KFlowWorkflow<I, O> {
         return KFlow.workflow(metadata.name) {
 

@@ -18,7 +18,10 @@ internal class WorkflowInspector(
                 "Class must be annotated with @Workflow."
             )
 
-        return inspect(kClass, annotation)
+        return inspect(
+            kClass = kClass,
+            annotation = annotation
+        )
     }
 
     fun inspect(

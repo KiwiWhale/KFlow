@@ -3,7 +3,7 @@ package io.github.mrjimin.kflow.spring.factory
 import io.github.mrjimin.kflow.annotation.Workflow
 import io.github.mrjimin.kflow.annotation.factory.AnnotatedWorkflowFactory
 import io.github.mrjimin.kflow.core.workflow.KFlowWorkflow
-import org.springframework.aop.framework.AopProxyUtils
+import org.springframework.aop.support.AopUtils
 
 class SpringWorkflowFactory {
 
@@ -11,11 +11,12 @@ class SpringWorkflowFactory {
         instance: Any,
         annotation: Workflow
     ): KFlowWorkflow<Any?, Any?> {
-        val target = AopProxyUtils.getSingletonTarget(instance) ?: instance
+        val targetClass = AopUtils.getTargetClass(instance)
 
         return AnnotatedWorkflowFactory.fromInstance(
-            instance = target,
-            annotation = annotation
+            instance = instance,
+            annotation = annotation,
+            targetClass = targetClass
         )
     }
 }
