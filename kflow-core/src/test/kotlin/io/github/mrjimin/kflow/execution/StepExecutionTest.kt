@@ -1,6 +1,9 @@
 package io.github.mrjimin.kflow.execution
 
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
+import kotlin.test.assertSame
 import kotlin.time.Duration.Companion.milliseconds
 
 class StepExecutionTest {

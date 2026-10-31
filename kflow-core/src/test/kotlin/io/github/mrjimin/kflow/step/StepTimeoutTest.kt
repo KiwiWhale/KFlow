@@ -7,8 +7,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import kotlin.test.*
-import kotlin.test.assertFailsWith
-import kotlin.test.assertIs
 import kotlin.time.Duration.Companion.milliseconds
 
 class StepTimeoutTest {

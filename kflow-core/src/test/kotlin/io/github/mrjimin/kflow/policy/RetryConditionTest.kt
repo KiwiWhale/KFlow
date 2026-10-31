@@ -2,7 +2,10 @@ package io.github.mrjimin.kflow.policy
 
 import io.github.mrjimin.kflow.KFlow
 import kotlinx.coroutines.test.runTest
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class RetryConditionTest {
 

@@ -8,8 +8,6 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.runTest
 import kotlin.test.*
-import kotlin.test.assertFailsWith
-import kotlin.test.assertIs
 
 class WorkflowTest {
 

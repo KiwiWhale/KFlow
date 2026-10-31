@@ -3,7 +3,9 @@ package io.github.mrjimin.kflow.step
 import io.github.mrjimin.kflow.KFlow
 import io.github.mrjimin.kflow.policy.RetryPolicy
 import kotlinx.coroutines.test.runTest
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class StepRetryTest {
 

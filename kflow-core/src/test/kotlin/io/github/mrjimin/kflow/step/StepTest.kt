@@ -4,8 +4,6 @@ import io.github.mrjimin.kflow.KFlow
 import io.github.mrjimin.kflow.exception.WorkflowExecutionException
 import kotlinx.coroutines.test.runTest
 import kotlin.test.*
-import kotlin.test.assertFailsWith
-import kotlin.test.assertIs
 
 class StepTest {
 
