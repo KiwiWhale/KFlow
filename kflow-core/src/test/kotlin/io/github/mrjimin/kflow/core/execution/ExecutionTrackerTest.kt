@@ -36,10 +36,10 @@ class ExecutionTrackerTest {
 
         val record = tracker.snapshot().single()
 
-        kotlin.test.assertEquals("작업", record.name)
-        kotlin.test.assertEquals(ExecutionStatus.SUCCESS, record.status)
-        kotlin.test.assertEquals(100.milliseconds, record.duration)
-        kotlin.test.assertEquals(1, record.attempt)
+        assertEquals("작업", record.name)
+        assertEquals(ExecutionStatus.SUCCESS, record.status)
+        assertEquals(100.milliseconds, record.duration)
+        assertEquals(1, record.attempt)
         assertTrue(record.successful)
         assertFalse(record.isFailure)
         assertNull(record.error)
@@ -60,9 +60,9 @@ class ExecutionTrackerTest {
 
         val record = tracker.snapshot().single()
 
-        kotlin.test.assertEquals("실패 작업", record.name)
-        kotlin.test.assertEquals(ExecutionStatus.FAILED, record.status)
-        kotlin.test.assertEquals(2, record.attempt)
+        assertEquals("실패 작업", record.name)
+        assertEquals(ExecutionStatus.FAILED, record.status)
+        assertEquals(2, record.attempt)
         assertTrue(record.isFailure)
         assertFalse(record.successful)
         assertSame(error, record.error)
@@ -76,7 +76,7 @@ class ExecutionTrackerTest {
         tracker.record("두 번째", ExecutionStatus.SUCCESS, 20.milliseconds)
         tracker.record("세 번째", ExecutionStatus.SUCCESS, 30.milliseconds)
 
-        kotlin.test.assertEquals(
+        assertEquals(
             listOf("첫 번째", "두 번째", "세 번째"),
             tracker.snapshot().map { it.name }
         )
@@ -92,8 +92,8 @@ class ExecutionTrackerTest {
 
         tracker.record("두 번째", ExecutionStatus.SUCCESS, 20.milliseconds)
 
-        kotlin.test.assertEquals(1, snapshot.size)
-        kotlin.test.assertEquals(2, tracker.snapshot().size)
+        assertEquals(1, snapshot.size)
+        assertEquals(2, tracker.snapshot().size)
         assertNotSame(snapshot, tracker.snapshot())
     }
 
@@ -108,9 +108,9 @@ class ExecutionTrackerTest {
 
         val event = events.single()
 
-        kotlin.test.assertEquals(WorkflowEventType.WORKFLOW_STARTED, event.type)
-        kotlin.test.assertEquals("test-id", event.executionId)
-        kotlin.test.assertEquals("test-workflow", event.workflowName)
+        assertEquals(WorkflowEventType.WORKFLOW_STARTED, event.type)
+        assertEquals("test-id", event.executionId)
+        assertEquals("test-workflow", event.workflowName)
     }
 
     @Test
@@ -124,8 +124,8 @@ class ExecutionTrackerTest {
 
         val event = events.single()
 
-        kotlin.test.assertEquals(WorkflowEventType.WORKFLOW_COMPLETED, event.type)
-        kotlin.test.assertEquals(100.milliseconds, event.duration)
+        assertEquals(WorkflowEventType.WORKFLOW_COMPLETED, event.type)
+        assertEquals(100.milliseconds, event.duration)
     }
 
     @Test
@@ -141,9 +141,9 @@ class ExecutionTrackerTest {
 
         val event = events.single()
 
-        kotlin.test.assertEquals(WorkflowEventType.WORKFLOW_FAILED, event.type)
+        assertEquals(WorkflowEventType.WORKFLOW_FAILED, event.type)
         assertSame(error, event.error)
-        kotlin.test.assertEquals(100.milliseconds, event.duration)
+        assertEquals(100.milliseconds, event.duration)
     }
 
     @Test
@@ -157,9 +157,9 @@ class ExecutionTrackerTest {
 
         val event = events.single()
 
-        kotlin.test.assertEquals(WorkflowEventType.STEP_STARTED, event.type)
-        kotlin.test.assertEquals("작업", event.stepName)
-        kotlin.test.assertEquals(2, event.attempt)
+        assertEquals(WorkflowEventType.STEP_STARTED, event.type)
+        assertEquals("작업", event.stepName)
+        assertEquals(2, event.attempt)
     }
 
     @Test
@@ -180,10 +180,10 @@ class ExecutionTrackerTest {
 
         val event = events.single()
 
-        kotlin.test.assertEquals(WorkflowEventType.STEP_RETRYING, event.type)
-        kotlin.test.assertEquals("작업", event.stepName)
-        kotlin.test.assertEquals(1, event.attempt)
-        kotlin.test.assertEquals(500.milliseconds, event.retryDelay)
+        assertEquals(WorkflowEventType.STEP_RETRYING, event.type)
+        assertEquals("작업", event.stepName)
+        assertEquals(1, event.attempt)
+        assertEquals(500.milliseconds, event.retryDelay)
         assertNull(event.duration)
         assertSame(error, event.error)
     }
@@ -201,7 +201,7 @@ class ExecutionTrackerTest {
             duration = 100.milliseconds
         )
 
-        kotlin.test.assertEquals(
+        assertEquals(
             WorkflowEventType.STEP_COMPLETED,
             events.single().type
         )
@@ -225,7 +225,7 @@ class ExecutionTrackerTest {
 
         val event = events.single()
 
-        kotlin.test.assertEquals(WorkflowEventType.STEP_FAILED, event.type)
+        assertEquals(WorkflowEventType.STEP_FAILED, event.type)
         assertSame(error, event.error)
     }
 
@@ -246,8 +246,8 @@ class ExecutionTrackerTest {
 
         tracker.workflowStarted()
 
-        kotlin.test.assertEquals(1, events.size)
-        kotlin.test.assertEquals(WorkflowEventType.WORKFLOW_STARTED, events.single().type)
+        assertEquals(1, events.size)
+        assertEquals(WorkflowEventType.WORKFLOW_STARTED, events.single().type)
     }
 
     @Test
@@ -279,7 +279,7 @@ class ExecutionTrackerTest {
 
         tracker.workflowStarted()
 
-        kotlin.test.assertEquals(listOf(1, 2, 3), calls)
+        assertEquals(listOf(1, 2, 3), calls)
     }
 
     @Test
@@ -298,8 +298,8 @@ class ExecutionTrackerTest {
 
         val records = tracker.snapshot()
 
-        kotlin.test.assertEquals(100, records.size)
-        kotlin.test.assertEquals(100, records.map { it.name }.distinct().size)
+        assertEquals(100, records.size)
+        assertEquals(100, records.map { it.name }.distinct().size)
     }
 
     @Test

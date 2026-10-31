@@ -8,6 +8,7 @@ import org.springframework.boot.autoconfigure.AutoConfigurations
 import org.springframework.boot.test.context.runner.ApplicationContextRunner
 import kotlin.test.Test
 import kotlin.test.assertNotNull
+import kotlin.test.assertSame
 
 class KFlowAutoConfigurationTest {
 
@@ -38,7 +39,7 @@ class KFlowAutoConfigurationTest {
             .run { context ->
                 assertNotNull(context.getBean<WorkflowRegistry>())
 
-                kotlin.test.assertSame(
+                assertSame(
                     customRegistry,
                     context.getBean<WorkflowRegistry>()
                 )
@@ -56,7 +57,7 @@ class KFlowAutoConfigurationTest {
                 { customFactory }
             )
             .run { context ->
-                kotlin.test.assertSame(
+                assertSame(
                     customFactory,
                     context.getBean<SpringWorkflowFactory>()
                 )

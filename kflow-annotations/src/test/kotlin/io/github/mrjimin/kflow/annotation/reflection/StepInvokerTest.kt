@@ -6,6 +6,7 @@ import kotlinx.coroutines.runBlocking
 import kotlin.reflect.full.memberFunctions
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
 
 class StepInvokerTest {
@@ -132,7 +133,7 @@ class StepInvokerTest {
     fun `실행 중 발생한 예외를 호출자에게 전달한다`() = runBlocking {
         val instance = SampleSteps()
 
-        kotlin.test.assertFailsWith<IllegalStateException> {
+        assertFailsWith<IllegalStateException> {
             invoker.invoke(
                 metadata = metadata("throwException"),
                 instance = instance,

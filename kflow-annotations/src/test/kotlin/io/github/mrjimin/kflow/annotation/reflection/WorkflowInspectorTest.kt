@@ -129,13 +129,13 @@ class WorkflowInspectorTest {
     }
 
     @Test
-    fun `WorkflowSpec이 없는 클래스는 예외가 발생한다`() {
+    fun `Workflow가 없는 클래스는 예외가 발생한다`() {
         val exception = assertFailsWith<InvalidWorkflowException> {
             inspector.inspect(UnannotatedWorkflow::class)
         }
 
         assertEquals(
-            "Invalid KFlow workflow 'UnannotatedWorkflow': Class must be annotated with @WorkflowSpec.",
+            "Invalid KFlow workflow 'UnannotatedWorkflow': Class must be annotated with @Workflow.",
             exception.message
         )
     }
