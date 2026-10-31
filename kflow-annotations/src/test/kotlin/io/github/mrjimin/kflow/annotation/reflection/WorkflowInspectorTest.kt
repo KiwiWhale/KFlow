@@ -1,0 +1,142 @@
+package io.github.mrjimin.kflow.annotation.reflection
+
+import io.github.mrjimin.kflow.annotation.Step
+import io.github.mrjimin.kflow.annotation.WorkflowSpec
+import io.github.mrjimin.kflow.annotation.exception.InvalidWorkflowException
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+
+class WorkflowInspectorTest {
+
+    private val inspector = WorkflowInspector()
+
+    @WorkflowSpec
+    class DefaultWorkflow {
+
+        @Step
+        fun first() {}
+
+        @Step
+        fun second() {}
+    }
+
+    @WorkflowSpec(name = "custom-workflow")
+    class CustomWorkflow {
+
+        @Step(order = 20)
+        fun second() {}
+
+        @Step(order = 10)
+        fun first() {}
+    }
+
+    @WorkflowSpec
+    class OrderedWorkflow {
+
+        @Step(order = 2)
+        fun third() {}
+
+        @Step(order = 1)
+        fun second() {}
+
+        @Step(order = 0)
+        fun first() {}
+    }
+
+    @WorkflowSpec
+    class DuplicateWorkflow {
+
+        @Step(name = "duplicate")
+        fun first() {}
+
+        @Step(name = "duplicate")
+        fun second() {}
+    }
+
+    @WorkflowSpec
+    class EmptyWorkflow
+
+    class UnannotatedWorkflow {
+
+        @Step
+        fun execute() {}
+    }
+
+    @Test
+    fun `기본 워크플로우 이름을 사용한다`() {
+        val metadata = inspector.inspect(DefaultWorkflow::class)
+
+        assertEquals("DefaultWorkflow", metadata.name)
+    }
+
+    @Test
+    fun `사용자 지정 워크플로우 이름을 사용한다`() {
+        val metadata = inspector.inspect(CustomWorkflow::class)
+
+        assertEquals("custom-workflow", metadata.name)
+    }
+
+    @Test
+    fun `워크플로우의 모든 단계를 수집한다`() {
+        val metadata = inspector.inspect(DefaultWorkflow::class)
+
+        assertEquals(2, metadata.steps.size)
+    }
+
+    @Test
+    fun `단계 순서에 따라 오름차순으로 정렬한다`() {
+        val metadata = inspector.inspect(OrderedWorkflow::class)
+
+        assertEquals(
+            listOf("first", "second", "third"),
+            metadata.steps.map { it.name }
+        )
+    }
+
+    @Test
+    fun `단계 순서가 같으면 이름을 기준으로 정렬한다`() {
+        val metadata = inspector.inspect(DefaultWorkflow::class)
+
+        assertEquals(
+            listOf("first", "second"),
+            metadata.steps.map { it.name }
+        )
+    }
+
+    @Test
+    fun `중복된 단계 이름이 있으면 예외가 발생한다`() {
+        val exception = assertFailsWith<InvalidWorkflowException> {
+            inspector.inspect(DuplicateWorkflow::class)
+        }
+
+        assertEquals(
+            "Invalid KFlow workflow 'DuplicateWorkflow': Duplicate step names: duplicate.",
+            exception.message
+        )
+    }
+
+    @Test
+    fun `단계가 없는 워크플로우는 예외가 발생한다`() {
+        val exception = assertFailsWith<InvalidWorkflowException> {
+            inspector.inspect(EmptyWorkflow::class)
+        }
+
+        assertEquals(
+            "Invalid KFlow workflow 'EmptyWorkflow': At least one @Step method must be declared.",
+            exception.message
+        )
+    }
+
+    @Test
+    fun `WorkflowSpec이 없는 클래스는 예외가 발생한다`() {
+        val exception = assertFailsWith<InvalidWorkflowException> {
+            inspector.inspect(UnannotatedWorkflow::class)
+        }
+
+        assertEquals(
+            "Invalid KFlow workflow 'UnannotatedWorkflow': Class must be annotated with @WorkflowSpec.",
+            exception.message
+        )
+    }
+}

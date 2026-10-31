@@ -6,9 +6,7 @@ import kotlin.time.Duration.Companion.milliseconds
 
 internal object AnnotationPolicyMapper {
 
-    fun toRetryPolicy(
-        annotation: StepRetry
-    ): RetryPolicy? {
+    fun toRetryPolicy(annotation: StepRetry): RetryPolicy? {
         if (annotation.maxAttempts == 1) {
             return null
         }

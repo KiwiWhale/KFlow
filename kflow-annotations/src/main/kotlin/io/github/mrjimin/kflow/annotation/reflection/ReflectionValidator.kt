@@ -8,10 +8,7 @@ import kotlin.reflect.KVisibility
 
 internal object ReflectionValidator {
 
-    fun validateStep(
-        function: KFunction<*>,
-        annotation: Step
-    ) {
+    fun validateStep(function: KFunction<*>, annotation: Step) {
         val name = annotation.name.ifBlank {
             function.name
         }
@@ -26,23 +23,18 @@ internal object ReflectionValidator {
 
         val parameters = function.parameters
 
-        val validParameters =
-            parameters.size in 1..2 &&
-                    parameters.firstOrNull()?.kind == KParameter.Kind.INSTANCE &&
-                    parameters.drop(1).all {
-                        it.kind == KParameter.Kind.VALUE
-                    }
+        val validParameters = parameters.size in 1..2 &&
+                parameters.firstOrNull()?.kind == KParameter.Kind.INSTANCE &&
+                parameters.drop(1).all {
+                    it.kind == KParameter.Kind.VALUE
+                }
 
         if (!validParameters) {
-            invalid(
-                "Step must be a member function with zero or one input parameter."
-            )
+            invalid("Step must be a member function with zero or one input parameter.")
         }
 
         if (parameters.any { it.isOptional || it.isVararg }) {
-            invalid(
-                "Default and vararg parameters are not supported."
-            )
+            invalid("Default and vararg parameters are not supported.")
         }
 
         if (annotation.timeoutMillis < 0L) {
@@ -60,15 +52,11 @@ internal object ReflectionValidator {
         }
 
         if (retry.maxDelayMillis < retry.initialDelayMillis) {
-            invalid(
-                "maxDelayMillis must be greater than or equal to initialDelayMillis."
-            )
+            invalid("maxDelayMillis must be greater than or equal to initialDelayMillis.")
         }
 
         if (!retry.multiplier.isFinite() || retry.multiplier < 1.0) {
-            invalid(
-                "multiplier must be finite and greater than or equal to 1.0."
-            )
+            invalid("multiplier must be finite and greater than or equal to 1.0.")
         }
     }
 }

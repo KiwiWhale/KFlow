@@ -21,19 +21,17 @@ object AnnotatedWorkflowFactory {
 
     private val stepInvoker = StepInvoker()
 
-    fun <I, O> fromInstance(
-        instance: Any
-    ): Workflow<I, O> {
+    fun <I, O> fromInstance(instance: Any): Workflow<I, O> {
         val metadata = metadataCache.get(instance.javaClass)
 
-        return KFlow.workflow<I, O>(metadata.name) {
+        return KFlow.workflow(metadata.name) {
 
             var currentData: Any? = input
 
             for (step in metadata.steps) {
                 val stepInput = currentData
 
-                currentData = step<Any?>(step.name) {
+                currentData = step(step.name) {
 
                     step.timeout?.let(::timeout)
                     step.retryPolicy?.let(::retry)

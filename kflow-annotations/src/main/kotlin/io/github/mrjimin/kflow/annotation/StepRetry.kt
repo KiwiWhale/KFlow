@@ -6,7 +6,7 @@ import io.github.mrjimin.kflow.policy.RetryJitter
 @Retention(AnnotationRetention.RUNTIME)
 @MustBeDocumented
 annotation class StepRetry(
-    val maxAttempts: Int = 3,
+    val maxAttempts: Int = 1,
     val initialDelayMillis: Long = 100L,
     val maxDelayMillis: Long = 10_000L,
     val multiplier: Double = 2.0,
