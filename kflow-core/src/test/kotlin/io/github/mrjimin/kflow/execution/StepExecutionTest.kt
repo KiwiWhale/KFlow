@@ -1,7 +1,6 @@
 package io.github.mrjimin.kflow.execution
 
-import org.junit.jupiter.api.Assertions.*
-import org.junit.jupiter.api.Test
+import kotlin.test.*
 import kotlin.time.Duration.Companion.milliseconds
 
 class StepExecutionTest {

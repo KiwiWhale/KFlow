@@ -5,7 +5,7 @@ import io.github.mrjimin.kflow.exception.StepException
 import io.github.mrjimin.kflow.exception.StepTimeoutException
 import io.github.mrjimin.kflow.execution.ExecutionStatus
 import io.github.mrjimin.kflow.execution.ExecutionTracker
-import io.github.mrjimin.kflow.workflow.WorkflowScope
+import io.github.mrjimin.kflow.workflow.KFlowWorkflowScope
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.delay
@@ -14,12 +14,12 @@ import kotlin.time.TimeSource
 
 internal class Step<I, O>(
     private val name: String,
-    private val action: suspend WorkflowScope<I>.() -> O,
+    private val action: suspend KFlowWorkflowScope<I>.() -> O,
     private val policy: StepPolicy
 ) {
 
     suspend fun execute(
-        scope: WorkflowScope<I>,
+        scope: KFlowWorkflowScope<I>,
         tracker: ExecutionTracker
     ): O {
         val retry = policy.retry
@@ -91,7 +91,7 @@ internal class Step<I, O>(
     }
 
     private suspend fun executeAction(
-        scope: WorkflowScope<I>
+        scope: KFlowWorkflowScope<I>
     ): O {
         val timeout = policy.timeout
             ?: return action(scope)

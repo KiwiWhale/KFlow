@@ -9,9 +9,9 @@ import kotlinx.coroutines.CancellationException
 import java.util.*
 import kotlin.time.TimeSource
 
-class Workflow<I, O> internal constructor(
+class KFlowWorkflow<I, O> internal constructor(
     val name: String,
-    private val action: suspend WorkflowScope<I>.() -> O,
+    private val action: suspend KFlowWorkflowScope<I>.() -> O,
     listeners: List<ExecutionListener> = emptyList()
 ) {
 
@@ -36,7 +36,7 @@ class Workflow<I, O> internal constructor(
             listeners = listeners
         )
 
-        val scope = WorkflowScope(
+        val scope = KFlowWorkflowScope(
             input = input,
             tracker = tracker
         )

@@ -3,9 +3,7 @@ package io.github.mrjimin.kflow.step
 import io.github.mrjimin.kflow.KFlow
 import io.github.mrjimin.kflow.policy.RetryPolicy
 import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.Test
+import kotlin.test.*
 
 class StepRetryTest {
 

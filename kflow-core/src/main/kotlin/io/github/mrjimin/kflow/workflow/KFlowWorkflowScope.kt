@@ -6,7 +6,7 @@ import io.github.mrjimin.kflow.execution.ExecutionTracker
 import io.github.mrjimin.kflow.step.StepBuilder
 
 @KFlowDsl
-class WorkflowScope<I> internal constructor(
+class KFlowWorkflowScope<I> internal constructor(
     val input: I,
     internal val tracker: ExecutionTracker,
     val context: WorkflowContext = WorkflowContext()

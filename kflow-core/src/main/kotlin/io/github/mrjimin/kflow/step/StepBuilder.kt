@@ -1,12 +1,12 @@
 package io.github.mrjimin.kflow.step
 
 import io.github.mrjimin.kflow.policy.RetryPolicy
-import io.github.mrjimin.kflow.workflow.WorkflowScope
+import io.github.mrjimin.kflow.workflow.KFlowWorkflowScope
 import kotlin.time.Duration
 
 class StepBuilder<I, O> internal constructor() {
 
-    private var action: (suspend WorkflowScope<I>.() -> O)? = null
+    private var action: (suspend KFlowWorkflowScope<I>.() -> O)? = null
 
     private var policy = StepPolicy()
 
@@ -34,7 +34,7 @@ class StepBuilder<I, O> internal constructor() {
         )
     }
 
-    fun execute(block: suspend WorkflowScope<I>.() -> O) {
+    fun execute(block: suspend KFlowWorkflowScope<I>.() -> O) {
         check(action == null) {
             "Step action is already defined"
         }

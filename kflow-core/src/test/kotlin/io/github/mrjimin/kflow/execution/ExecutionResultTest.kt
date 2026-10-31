@@ -3,9 +3,7 @@ package io.github.mrjimin.kflow.execution
 import io.github.mrjimin.kflow.KFlow
 import io.github.mrjimin.kflow.exception.WorkflowExecutionException
 import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.Assertions.*
-import org.junit.jupiter.api.Test
-import kotlin.test.assertFailsWith
+import kotlin.test.*
 
 class ExecutionResultTest {
 

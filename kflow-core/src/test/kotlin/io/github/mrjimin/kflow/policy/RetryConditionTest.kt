@@ -2,8 +2,7 @@ package io.github.mrjimin.kflow.policy
 
 import io.github.mrjimin.kflow.KFlow
 import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.Assertions.*
-import org.junit.jupiter.api.Test
+import kotlin.test.*
 
 class RetryConditionTest {
 
