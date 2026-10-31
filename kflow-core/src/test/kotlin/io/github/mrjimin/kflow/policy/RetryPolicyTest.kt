@@ -3,6 +3,7 @@ package io.github.mrjimin.kflow.policy
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
+import kotlin.test.assertFailsWith
 import kotlin.time.Duration.Companion.milliseconds
 
 class RetryPolicyTest {
@@ -17,14 +18,14 @@ class RetryPolicyTest {
 
     @Test
     fun `재시도 횟수는 최소 한 번이어야 한다`() {
-        assertThrows(IllegalArgumentException::class.java) {
+        assertFailsWith<IllegalArgumentException> {
             RetryPolicy(maxAttempts = 0)
         }
     }
 
     @Test
     fun `최대 지연 시간은 초기 지연 시간보다 작을 수 없다`() {
-        assertThrows(IllegalArgumentException::class.java) {
+        assertFailsWith<IllegalArgumentException> {
             RetryPolicy(
                 initialDelay = 500.milliseconds,
                 maxDelay = 100.milliseconds
@@ -34,7 +35,7 @@ class RetryPolicyTest {
 
     @Test
     fun `배수가 1보다 작으면 예외가 발생한다`() {
-        assertThrows(IllegalArgumentException::class.java) {
+        assertFailsWith<IllegalArgumentException> {
             RetryPolicy(multiplier = 0.5)
         }
     }

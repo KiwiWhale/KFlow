@@ -1,9 +1,11 @@
 package io.github.mrjimin.kflow.execution
 
 import io.github.mrjimin.kflow.KFlow
+import io.github.mrjimin.kflow.exception.WorkflowExecutionException
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
+import kotlin.test.assertFailsWith
 
 class ExecutionResultTest {
 
@@ -68,15 +70,20 @@ class ExecutionResultTest {
     fun `실패한 결과에서 값을 꺼내면 예외가 발생한다`() = runTest {
         val workflow = KFlow.workflow<Unit, String>("실패") {
             step("작업") {
-                execute { error("오류") }
+                execute {
+                    error("오류")
+                }
             }
         }
 
         val result = workflow.executeWithResult(Unit)
 
-        assertThrows(IllegalStateException::class.java) {
+        val exception = assertFailsWith<WorkflowExecutionException> {
             result.getOrThrow()
         }
+
+        assertEquals("실패", exception.workflowName)
+        assertNotNull(exception.cause)
     }
 
     @Test

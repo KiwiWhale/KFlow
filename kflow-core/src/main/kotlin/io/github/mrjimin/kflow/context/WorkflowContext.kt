@@ -1,7 +1,6 @@
 package io.github.mrjimin.kflow.context
 
-import java.util.Collections
-import java.util.HashMap
+import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
 class WorkflowContext {

@@ -2,12 +2,14 @@ package io.github.mrjimin.kflow.step
 
 import io.github.mrjimin.kflow.KFlow
 import io.github.mrjimin.kflow.exception.StepTimeoutException
+import io.github.mrjimin.kflow.exception.WorkflowExecutionException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import kotlin.test.assertFailsWith
+import kotlin.test.assertIs
 import kotlin.time.Duration.Companion.milliseconds
 
 class StepTimeoutTest {
@@ -19,7 +21,7 @@ class StepTimeoutTest {
                 timeout(500.milliseconds)
 
                 execute {
-                    delay(100)
+                    delay(100.milliseconds)
                     "완료"
                 }
             }
@@ -35,7 +37,7 @@ class StepTimeoutTest {
                 timeout(100.milliseconds)
 
                 execute {
-                    delay(200)
+                    delay(200.milliseconds)
                     "완료"
                 }
             }
@@ -44,7 +46,13 @@ class StepTimeoutTest {
         val result = workflow.executeWithResult(Unit)
 
         assertFalse(result.successful)
-        assertTrue(result.error is StepTimeoutException)
+        assertTrue(result.isFailure)
+        assertNotNull(result.error)
+
+        val stepException = requireNotNull(result.error?.cause)
+        val timeoutException = requireNotNull(stepException.cause)
+
+        assertIs<StepTimeoutException>(timeoutException)
     }
 
     @Test
@@ -52,7 +60,7 @@ class StepTimeoutTest {
         val workflow = KFlow.workflow<Unit, Unit>("취소") {
             step("작업") {
                 execute {
-                    delay(10_000)
+                    delay(10_000.milliseconds)
                 }
             }
         }
@@ -76,9 +84,11 @@ class StepTimeoutTest {
             }
         }
 
-        assertFailsWith<IllegalArgumentException> {
+        val exception = assertFailsWith<WorkflowExecutionException> {
             workflow.execute(Unit)
         }
+
+        assertIs<IllegalArgumentException>(exception.cause)
     }
 
     @Test
@@ -88,7 +98,7 @@ class StepTimeoutTest {
                 timeout(100.milliseconds)
 
                 execute {
-                    delay(200)
+                    delay(200.milliseconds)
                     "완료"
                 }
             }
@@ -98,16 +108,20 @@ class StepTimeoutTest {
 
         assertFalse(result.successful)
 
-        val exception = requireNotNull(result.error)
+        val workflowException = requireNotNull(result.error)
+        val stepException = requireNotNull(workflowException.cause)
+        val timeoutException = requireNotNull(stepException.cause)
 
-        assertTrue(exception is StepTimeoutException)
+        assertIs<StepTimeoutException>(timeoutException)
 
-        val timeoutException = exception as StepTimeoutException
+        val recordedException = result.steps.first().error
 
-        assertEquals("작업", timeoutException.stepName)
-        assertEquals(100.milliseconds, timeoutException.timeout)
+        assertIs<StepTimeoutException>(recordedException)
+
+        assertEquals("작업", recordedException.stepName)
+        assertEquals(100.milliseconds, recordedException.timeout)
 
         assertEquals(1, result.steps.size)
-        assertSame(exception, result.steps.first().error)
+        assertSame(timeoutException, recordedException)
     }
 }

@@ -132,9 +132,14 @@ class StepRetryTest {
         )
 
         assertTrue(result.isFailure)
+
+        val workflowException = requireNotNull(result.error)
+
+        val retryException = requireNotNull(workflowException.cause)
+
         assertEquals(
             "실패",
-            result.error?.message
+            retryException.cause?.message
         )
 
         assertEquals(

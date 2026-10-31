@@ -16,9 +16,7 @@ internal class ExecutionTracker(
     private val listeners = listeners.toList()
 
     private val records = mutableListOf<StepExecution>()
-
     private val recordsMutex = Mutex()
-    private val eventMutex = Mutex()
 
     suspend fun workflowStarted() {
         emit(WorkflowEventType.WORKFLOW_STARTED)
@@ -46,6 +44,10 @@ internal class ExecutionTracker(
         name: String,
         attempt: Int
     ) {
+        require(attempt >= 1) {
+            "attempt must be at least 1"
+        }
+
         emit(
             type = WorkflowEventType.STEP_STARTED,
             stepName = name,
@@ -59,11 +61,15 @@ internal class ExecutionTracker(
         retryDelay: Duration,
         error: Throwable
     ) {
+        require(attempt >= 1) {
+            "attempt must be at least 1"
+        }
+
         emit(
             type = WorkflowEventType.STEP_RETRYING,
             stepName = name,
             attempt = attempt,
-            duration = retryDelay,
+            retryDelay = retryDelay,
             error = error
         )
     }
@@ -75,16 +81,20 @@ internal class ExecutionTracker(
         attempt: Int = 1,
         error: Throwable? = null
     ) {
+        require(attempt >= 1) {
+            "attempt must be at least 1"
+        }
+
+        val execution = StepExecution(
+            name = name,
+            status = status,
+            duration = duration,
+            attempt = attempt,
+            error = error
+        )
+
         recordsMutex.withLock {
-            records.add(
-                StepExecution(
-                    name = name,
-                    status = status,
-                    duration = duration,
-                    attempt = attempt,
-                    error = error
-                )
-            )
+            records.add(execution)
         }
 
         emit(
@@ -121,7 +131,11 @@ internal class ExecutionTracker(
             error = error
         )
 
+        val coroutineContext = currentCoroutineContext()
+
         for (listener in listeners) {
+            coroutineContext.ensureActive()
+
             try {
                 listener.onEvent(event)
             } catch (exception: CancellationException) {

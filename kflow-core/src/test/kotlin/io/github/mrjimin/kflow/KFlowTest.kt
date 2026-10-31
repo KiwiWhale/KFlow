@@ -4,6 +4,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
+import kotlin.test.assertFailsWith
 
 class KFlowTest {
 
@@ -21,14 +22,14 @@ class KFlowTest {
 
     @Test
     fun `워크플로우 이름이 비어 있으면 예외가 발생한다`() {
-        assertThrows(IllegalArgumentException::class.java) {
+        assertFailsWith<IllegalArgumentException> {
             KFlow.workflow<Unit, Unit>("") {}
         }
     }
 
     @Test
     fun `워크플로우 이름이 공백이면 예외가 발생한다`() {
-        assertThrows(IllegalArgumentException::class.java) {
+        assertFailsWith<IllegalArgumentException> {
             KFlow.workflow<Unit, Unit>("   ") {}
         }
     }

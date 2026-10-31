@@ -31,7 +31,7 @@ data class RetryPolicy(
         }
     }
 
-    internal fun delayFor(attempt: Int): Duration {
+    fun delayFor(attempt: Int): Duration {
         require(attempt >= 1) {
             "attempt must be at least 1"
         }

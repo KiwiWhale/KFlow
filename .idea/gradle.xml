@@ -12,6 +12,7 @@
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/kflow-annotations" />
             <option value="$PROJECT_DIR$/kflow-core" />
+            <option value="$PROJECT_DIR$/kflow-example" />
           </set>
         </option>
       </GradleProjectSettings>

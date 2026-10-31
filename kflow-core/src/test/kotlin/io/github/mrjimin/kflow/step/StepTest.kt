@@ -1,11 +1,14 @@
 package io.github.mrjimin.kflow.step
 
 import io.github.mrjimin.kflow.KFlow
+import io.github.mrjimin.kflow.exception.WorkflowExecutionException
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import kotlin.test.assertFailsWith
+import kotlin.test.assertIs
 
 class StepTest {
 
@@ -28,9 +31,11 @@ class StepTest {
             }
         }
 
-        assertFailsWith<IllegalArgumentException> {
+        val exception = assertFailsWith<WorkflowExecutionException> {
             workflow.execute(Unit)
         }
+
+        assertIs<IllegalArgumentException>(exception.cause)
     }
 
     @Test
@@ -41,9 +46,11 @@ class StepTest {
             }
         }
 
-        assertFailsWith<IllegalArgumentException> {
+        val exception = assertFailsWith<WorkflowExecutionException> {
             workflow.execute(Unit)
         }
+
+        assertTrue(exception.cause is IllegalArgumentException)
     }
 
     @Test
@@ -52,7 +59,7 @@ class StepTest {
 
         builder.execute {}
 
-        assertThrows(IllegalStateException::class.java) {
+        assertFailsWith<IllegalStateException> {
             builder.execute {}
         }
     }
@@ -63,8 +70,10 @@ class StepTest {
             step("빈 단계") {}
         }
 
-        assertFailsWith<IllegalStateException> {
+        val exception = assertFailsWith<WorkflowExecutionException> {
             workflow.execute(Unit)
         }
+
+        assertIs<IllegalStateException>(exception.cause)
     }
 }

@@ -1,6 +1,8 @@
 package io.github.mrjimin.kflow.workflow
 
 import io.github.mrjimin.kflow.KFlow
+import io.github.mrjimin.kflow.exception.StepException
+import io.github.mrjimin.kflow.exception.WorkflowExecutionException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.delay
@@ -9,6 +11,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Test
 import kotlin.test.assertFailsWith
+import kotlin.test.assertIs
 
 class WorkflowTest {
 
@@ -118,11 +121,15 @@ class WorkflowTest {
             }
         }
 
-        val exception = assertFailsWith<IllegalStateException> {
+        val exception = assertFailsWith<WorkflowExecutionException> {
             workflow.execute(Unit)
         }
 
-        assertEquals("실패 테스트", exception.message)
+        val stepException = assertIs<StepException>(exception.cause)
+
+        assertIs<IllegalStateException>(stepException.cause)
+
+        assertEquals("실패 테스트", stepException.cause?.message)
     }
 
     @Test
@@ -143,7 +150,7 @@ class WorkflowTest {
             }
         }
 
-        assertFailsWith<IllegalStateException> {
+        assertFailsWith<WorkflowExecutionException> {
             workflow.execute(Unit)
         }
 

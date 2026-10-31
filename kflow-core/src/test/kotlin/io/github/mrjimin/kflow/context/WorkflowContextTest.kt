@@ -2,6 +2,7 @@ package io.github.mrjimin.kflow.context
 
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
+import kotlin.test.assertFailsWith
 
 class WorkflowContextTest {
 
@@ -22,7 +23,7 @@ class WorkflowContextTest {
         val context = WorkflowContext()
         context["count"] = 10
 
-        assertThrows(ClassCastException::class.java) {
+        assertFailsWith<ClassCastException> {
             context.require<String>("count")
         }
     }
@@ -31,7 +32,7 @@ class WorkflowContextTest {
     fun `require는 존재하지 않는 키에 예외를 발생시킨다`() {
         val context = WorkflowContext()
 
-        assertThrows(NoSuchElementException::class.java) {
+        assertFailsWith<NoSuchElementException> {
             context.require<String>("missing")
         }
     }
