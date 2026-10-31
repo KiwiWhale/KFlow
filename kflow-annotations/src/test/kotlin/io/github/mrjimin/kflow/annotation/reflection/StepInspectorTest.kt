@@ -59,7 +59,7 @@ class StepInspectorTest {
         assertEquals("defaultName", metadata.name)
         assertEquals(0, metadata.order)
         assertNull(metadata.timeout)
-        assertNotNull(metadata.retryPolicy)
+        assertNull(metadata.retryPolicy)
         assertNull(metadata.inputParameter)
     }
 

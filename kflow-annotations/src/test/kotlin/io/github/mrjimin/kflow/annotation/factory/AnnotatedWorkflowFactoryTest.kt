@@ -3,7 +3,7 @@ package io.github.mrjimin.kflow.annotation.factory
 import io.github.mrjimin.kflow.annotation.Step
 import io.github.mrjimin.kflow.annotation.Workflow
 import io.github.mrjimin.kflow.annotation.exception.InvalidWorkflowException
-import io.github.mrjimin.kflow.workflow.Workflow
+import io.github.mrjimin.kflow.workflow.KFlowWorkflow
 import kotlin.test.Test
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
@@ -41,7 +41,7 @@ class AnnotatedWorkflowFactoryTest {
 
     @Test
     fun `어노테이션이 적용된 인스턴스로 워크플로우를 생성한다`() {
-        val workflow: Workflow<String, String> =
+        val workflow: KFlowWorkflow<String, String> =
             AnnotatedWorkflowFactory.fromInstance(instance)
 
         assertNotNull(workflow)
@@ -49,7 +49,7 @@ class AnnotatedWorkflowFactoryTest {
 
     @Test
     fun `사용자 지정 워크플로우 이름으로 생성할 수 있다`() {
-        val workflow: Workflow<String, String> =
+        val workflow: KFlowWorkflow<String, String> =
             AnnotatedWorkflowFactory.fromInstance(
                 CustomWorkflow()
             )
@@ -77,10 +77,10 @@ class AnnotatedWorkflowFactoryTest {
 
     @Test
     fun `동일한 인스턴스로 여러 워크플로우를 생성할 수 있다`() {
-        val first: Workflow<String, String> =
+        val first: KFlowWorkflow<String, String> =
             AnnotatedWorkflowFactory.fromInstance(instance)
 
-        val second: Workflow<String, String> =
+        val second: KFlowWorkflow<String, String> =
             AnnotatedWorkflowFactory.fromInstance(instance)
 
         assertNotNull(first)

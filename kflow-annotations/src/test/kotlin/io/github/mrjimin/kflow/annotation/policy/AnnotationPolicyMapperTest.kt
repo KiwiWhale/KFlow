@@ -19,12 +19,12 @@ class AnnotationPolicyMapperTest {
     }
 
     @Test
-    fun `기본 재시도 설정으로 정책을 생성한다`() {
+    fun `기본 설정에서는 재시도 정책을 생성하지 않는다`() {
         val annotation = Retry()
 
         val policy = AnnotationPolicyMapper.toRetryPolicy(annotation)
 
-        assertNotNull(policy)
+        assertNull(policy)
     }
 
     @Test
