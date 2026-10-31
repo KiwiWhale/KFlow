@@ -1,6 +1,5 @@
 package io.github.mrjimin.kflow.policy
 
-import kotlin.math.pow
 import kotlin.random.Random
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
@@ -15,38 +14,56 @@ data class RetryPolicy(
 ) {
 
     init {
-        require(maxAttempts >= 1)
-        require(initialDelay >= Duration.ZERO)
-        require(maxDelay >= initialDelay)
-        require(multiplier.isFinite() && multiplier >= 1.0)
+        require(maxAttempts >= 1) {
+            "maxAttempts must be at least 1"
+        }
+
+        require(initialDelay.isFinite() && initialDelay >= Duration.ZERO) {
+            "initialDelay must be finite and non-negative"
+        }
+
+        require(maxDelay.isFinite() && maxDelay >= initialDelay) {
+            "maxDelay must be finite and greater than or equal to initialDelay"
+        }
+
+        require(multiplier.isFinite() && multiplier >= 1.0) {
+            "multiplier must be finite and greater than or equal to 1.0"
+        }
     }
 
     internal fun delayFor(attempt: Int): Duration {
-        require(attempt >= 1)
+        require(attempt >= 1) {
+            "attempt must be at least 1"
+        }
 
         if (initialDelay == Duration.ZERO) {
             return Duration.ZERO
         }
 
-        val factor = multiplier.pow(attempt - 1)
+        var baseDelay = initialDelay
 
-        val baseDelay = if (!factor.isFinite()) {
-            maxDelay
-        } else {
-            (initialDelay * factor).coerceAtMost(maxDelay)
+        if (multiplier > 1.0) {
+            var remaining = attempt - 1
+
+            while (remaining > 0 && baseDelay < maxDelay) {
+                baseDelay = (baseDelay * multiplier)
+                    .coerceAtMost(maxDelay)
+
+                remaining--
+            }
         }
 
-        return when (jitter) {
+        val jitteredDelay = when (jitter) {
             RetryJitter.NONE -> baseDelay
 
             RetryJitter.FULL ->
                 baseDelay * Random.nextDouble()
 
             RetryJitter.EQUAL ->
-                baseDelay * (
-                        0.5 + Random.nextDouble() * 0.5
-                        )
-        }.coerceAtMost(maxDelay)
+                baseDelay * (0.5 + Random.nextDouble() * 0.5)
+        }
+
+        return jitteredDelay.coerceAtMost(maxDelay)
     }
 
     internal fun shouldRetry(exception: Exception): Boolean =

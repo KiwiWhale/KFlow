@@ -6,7 +6,7 @@ import io.github.mrjimin.kflow.execution.ExecutionResult
 import io.github.mrjimin.kflow.execution.ExecutionStatus
 import io.github.mrjimin.kflow.execution.ExecutionTracker
 import kotlinx.coroutines.CancellationException
-import java.util.*
+import java.util.UUID
 import kotlin.time.TimeSource
 
 class Workflow<I, O> internal constructor(
@@ -16,6 +16,12 @@ class Workflow<I, O> internal constructor(
 ) {
 
     private val listeners = listeners.toList()
+
+    init {
+        require(name.isNotBlank()) {
+            "Workflow name cannot be blank"
+        }
+    }
 
     suspend fun execute(input: I): O =
         executeWithResult(input).getOrThrow()
@@ -50,8 +56,10 @@ class Workflow<I, O> internal constructor(
                 duration = duration,
                 tracker = tracker
             )
+
         } catch (exception: CancellationException) {
             throw exception
+
         } catch (exception: Exception) {
             val duration = startedAt.elapsedNow()
 
@@ -77,20 +85,22 @@ class Workflow<I, O> internal constructor(
         }
     }
 
-    private fun createResult(
+    private suspend fun createResult(
         executionId: String,
         status: ExecutionStatus,
         value: O?,
         duration: kotlin.time.Duration,
         tracker: ExecutionTracker,
         error: WorkflowExecutionException? = null
-    ): ExecutionResult<O> = ExecutionResult(
-        executionId = executionId,
-        workflowName = name,
-        status = status,
-        value = value,
-        steps = tracker.snapshot(),
-        duration = duration,
-        error = error
-    )
+    ): ExecutionResult<O> {
+        return ExecutionResult(
+            executionId = executionId,
+            workflowName = name,
+            status = status,
+            value = value,
+            steps = tracker.snapshot(),
+            duration = duration,
+            error = error
+        )
+    }
 }

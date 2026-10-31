@@ -10,6 +10,7 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/kflow-annotations" />
             <option value="$PROJECT_DIR$/kflow-core" />
           </set>
         </option>

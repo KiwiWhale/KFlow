@@ -1,6 +1,8 @@
 dependencies {
     api(libs.kotlinx.coroutines.core)
 
+    implementation(kotlin("reflect"))
+
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(kotlin("test"))
 }

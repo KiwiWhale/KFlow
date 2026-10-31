@@ -36,10 +36,10 @@ data class ExecutionResult<T>(
         if (isFailure) error else null
 
     inline fun <R> fold(
-        onSuccess: (T?) -> R,
+        onSuccess: (T) -> R,
         onFailure: (Throwable?) -> R
     ): R = when (status) {
-        ExecutionStatus.SUCCESS -> onSuccess(value)
+        ExecutionStatus.SUCCESS -> onSuccess(getOrThrow())
         ExecutionStatus.FAILED -> onFailure(error)
     }
 }

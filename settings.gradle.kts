@@ -12,3 +12,4 @@ plugins {
 rootProject.name = "KFlow"
 
 include(":kflow-core")
+include(":kflow-annotations")

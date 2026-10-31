@@ -11,15 +11,27 @@ class StepBuilder<I, O> internal constructor() {
     private var policy = StepPolicy()
 
     fun retry(policy: RetryPolicy) {
-        this.policy = this.policy.copy(retry = policy)
+        check(this.policy.retry == null) {
+            "Retry policy is already configured"
+        }
+
+        this.policy = this.policy.copy(
+            retry = policy
+        )
     }
 
     fun timeout(duration: Duration) {
-        require(duration.isPositive()) {
-            "Timeout must be positive"
+        check(this.policy.timeout == null) {
+            "Timeout is already configured"
         }
 
-        policy = policy.copy(timeout = duration)
+        require(duration.isFinite() && duration.isPositive()) {
+            "Timeout must be finite and positive"
+        }
+
+        policy = policy.copy(
+            timeout = duration
+        )
     }
 
     fun execute(block: suspend WorkflowScope<I>.() -> O) {

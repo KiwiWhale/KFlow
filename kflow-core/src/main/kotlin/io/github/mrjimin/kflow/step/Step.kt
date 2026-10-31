@@ -7,8 +7,9 @@ import io.github.mrjimin.kflow.execution.ExecutionStatus
 import io.github.mrjimin.kflow.execution.ExecutionTracker
 import io.github.mrjimin.kflow.workflow.WorkflowScope
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.coroutines.withTimeout
 import kotlin.time.TimeSource
 
 internal class Step<I, O>(
@@ -24,19 +25,15 @@ internal class Step<I, O>(
         val retry = policy.retry
         val maxAttempts = retry?.maxAttempts ?: 1
 
-        for (attempt in 1..maxAttempts) {
+        var attempt = 1
+
+        while (true) {
             val startedAt = TimeSource.Monotonic.markNow()
 
             try {
-                tracker.stepStarted(name)
+                tracker.stepStarted(name, attempt)
 
-                val result = if (policy.timeout != null) {
-                    withTimeoutOrNull(policy.timeout) {
-                        action(scope)
-                    } ?: throw StepTimeoutException(name, policy.timeout)
-                } else {
-                    action(scope)
-                }
+                val result = executeAction(scope)
 
                 tracker.record(
                     name = name,
@@ -59,15 +56,9 @@ internal class Step<I, O>(
                     error = exception
                 )
 
-                if (attempt == maxAttempts || retry?.shouldRetry(exception) != true) {
-                    if (retry != null && attempt == maxAttempts) {
-                        throw RetryExhaustedException(
-                            stepName = name,
-                            maxAttempts = maxAttempts,
-                            cause = exception
-                        )
-                    }
+                val shouldRetry = retry?.shouldRetry(exception) == true
 
+                if (!shouldRetry) {
                     throw StepException(
                         stepName = name,
                         attempt = attempt,
@@ -76,10 +67,45 @@ internal class Step<I, O>(
                     )
                 }
 
-                delay(retry.delayFor(attempt))
+                if (attempt >= maxAttempts) {
+                    throw RetryExhaustedException(
+                        stepName = name,
+                        maxAttempts = maxAttempts,
+                        cause = exception
+                    )
+                }
+
+                val retryDelay = retry.delayFor(attempt)
+
+                tracker.stepRetrying(
+                    name = name,
+                    attempt = attempt,
+                    retryDelay = retryDelay,
+                    error = exception
+                )
+
+                delay(retryDelay)
+                attempt++
             }
         }
+    }
 
-        error("Unreachable step state: $name")
+    private suspend fun executeAction(
+        scope: WorkflowScope<I>
+    ): O {
+        val timeout = policy.timeout
+            ?: return action(scope)
+
+        try {
+            return withTimeout(timeout) {
+                action(scope)
+            }
+        } catch (exception: TimeoutCancellationException) {
+            throw StepTimeoutException(
+                stepName = name,
+                timeout = timeout,
+                cause = exception
+            )
+        }
     }
 }

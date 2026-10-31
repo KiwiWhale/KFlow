@@ -10,6 +10,20 @@ data class StepExecution(
     val error: Throwable? = null
 ) {
 
+    init {
+        require(name.isNotBlank()) {
+            "Step name cannot be blank"
+        }
+
+        require(attempt >= 1) {
+            "Attempt must be at least 1"
+        }
+
+        require(duration >= Duration.ZERO) {
+            "Duration cannot be negative"
+        }
+    }
+
     val successful: Boolean
         get() = status == ExecutionStatus.SUCCESS
 

@@ -1,0 +1,55 @@
+package io.github.mrjimin.kflow.annotation.factory
+
+import io.github.mrjimin.kflow.KFlow
+import io.github.mrjimin.kflow.annotation.metadata.WorkflowMetadataCache
+import io.github.mrjimin.kflow.annotation.reflection.StepInspector
+import io.github.mrjimin.kflow.annotation.reflection.StepInvoker
+import io.github.mrjimin.kflow.annotation.reflection.WorkflowInspector
+import io.github.mrjimin.kflow.workflow.Workflow
+
+object AnnotatedWorkflowFactory {
+
+    private val stepInspector = StepInspector()
+
+    private val workflowInspector = WorkflowInspector(
+        stepInspector = stepInspector
+    )
+
+    private val metadataCache = WorkflowMetadataCache(
+        inspector = workflowInspector
+    )
+
+    private val stepInvoker = StepInvoker()
+
+    fun <I, O> fromInstance(
+        instance: Any
+    ): Workflow<I, O> {
+        val metadata = metadataCache.get(instance.javaClass)
+
+        return KFlow.workflow<I, O>(metadata.name) {
+
+            var currentData: Any? = input
+
+            for (step in metadata.steps) {
+                val stepInput = currentData
+
+                currentData = step<Any?>(step.name) {
+
+                    step.timeout?.let(::timeout)
+                    step.retryPolicy?.let(::retry)
+
+                    execute {
+                        stepInvoker.invoke(
+                            metadata = step,
+                            instance = instance,
+                            input = stepInput
+                        )
+                    }
+                }
+            }
+
+            @Suppress("UNCHECKED_CAST")
+            currentData as O
+        }
+    }
+}

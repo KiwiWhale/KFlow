@@ -7,5 +7,6 @@ enum class WorkflowEventType {
 
     STEP_STARTED, // Step execution started
     STEP_COMPLETED, // Step execution completed successfully
-    STEP_FAILED // Step execution failed
+    STEP_FAILED, // Step execution failed
+    STEP_RETRYING
 }
