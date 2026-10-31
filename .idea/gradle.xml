@@ -13,6 +13,7 @@
             <option value="$PROJECT_DIR$/kflow-annotations" />
             <option value="$PROJECT_DIR$/kflow-core" />
             <option value="$PROJECT_DIR$/kflow-example" />
+            <option value="$PROJECT_DIR$/kflow-ktor" />
             <option value="$PROJECT_DIR$/kflow-spring-boot-starter" />
           </set>
         </option>
