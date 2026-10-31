@@ -1,0 +1,104 @@
+name: Publish KFlow
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version (e.g. 1.0.0)"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: kflow-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Build & Publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Check Branch
+        run: |
+          if [[ "$GITHUB_REF" != "refs/heads/master" ]]; then
+            echo "::error::Publishing is only allowed from master."
+            exit 1
+          fi
+
+      - name: Validate Version
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::Invalid version format: $VERSION"
+            exit 1
+          fi
+
+          echo "TAG=v$VERSION" >> "$GITHUB_ENV"
+
+      - name: Check Existing Tag
+        run: |
+          git fetch --tags origin
+
+          if git show-ref --verify --quiet "refs/tags/$TAG"; then
+            echo "::error::Tag $TAG already exists."
+            exit 1
+          fi
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '25'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v5
+
+      - name: Build and Test
+        run: |
+          chmod +x ./gradlew
+          ./gradlew clean build publishToMavenLocal
+
+      - name: Collect Release Artifacts
+        run: |
+          mapfile -t assets < <(
+            find \
+              kflow-core/build/libs \
+              kflow-annotations/build/libs \
+              kflow-spring-boot-starter/build/libs \
+              kflow-ktor/build/libs \
+              -maxdepth 1 \
+              -type f \
+              -name '*.jar' \
+              | sort
+          )
+
+          if [ "${#assets[@]}" -eq 0 ]; then
+            echo "::error::No release JAR files found."
+            exit 1
+          fi
+
+          printf '%s\n' "${assets[@]}"
+
+          printf '%s\n' "${assets[@]}" > release-assets.txt
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mapfile -t assets < release-assets.txt
+
+          gh release create "$TAG" \
+            "${assets[@]}" \
+            --title "KFlow $TAG" \
+            --generate-notes \
+            --target "$GITHUB_SHA"
