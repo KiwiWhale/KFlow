@@ -17,14 +17,16 @@ data class PaymentReceipt(
     val amount: Long
 )
 
-class PaymentGateway {
+class PaymentGateway(
+    private val failureCount: Int = 3
+) {
 
     private var attempts = 0
 
     fun charge(request: PaymentRequest): PaymentReceipt {
         attempts++
 
-        if (attempts < 3) {
+        if (attempts < failureCount) {
             throw IllegalStateException("결제 서버 일시 오류")
         }
 

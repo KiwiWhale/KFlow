@@ -5,6 +5,7 @@ import io.github.mrjimin.kflow.annotation.Workflow
 import io.github.mrjimin.kflow.annotation.factory.AnnotatedWorkflowFactory
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import kotlin.time.Duration.Companion.milliseconds
 
 data class ImageFile(
     val fileName: String,
@@ -25,8 +26,14 @@ data class ProcessedImage(
 
 class ImageService {
 
+    suspend fun validate(image: ImageFile): ImageFile {
+        require(image.width > 0)
+        require(image.height > 0)
+        return image
+    }
+
     suspend fun resize(image: ImageFile): ResizedImage {
-        delay(100)
+        delay(100.milliseconds)
 
         return ResizedImage(
             fileName = image.fileName,
@@ -35,7 +42,7 @@ class ImageService {
     }
 
     suspend fun compress(image: ResizedImage): ProcessedImage {
-        delay(100)
+        delay(100.milliseconds)
 
         return ProcessedImage(
             fileName = image.fileName,
@@ -51,11 +58,8 @@ class ImageWorkflow(
 ) {
 
     @Step(order = 1)
-    fun validate(image: ImageFile): ImageFile {
-        require(image.width > 0)
-        require(image.height > 0)
-
-        return image
+    suspend fun validate(image: ImageFile): ImageFile {
+        return service.validate(image)
     }
 
     @Step(
@@ -82,11 +86,7 @@ fun main() = runBlocking {
         )
 
     val result = workflow.execute(
-        ImageFile(
-            fileName = "photo.png",
-            width = 1920,
-            height = 1080
-        )
+        ImageFile("photo.png", 1920, 1080)
     )
 
     println("이미지 처리 완료: $result")

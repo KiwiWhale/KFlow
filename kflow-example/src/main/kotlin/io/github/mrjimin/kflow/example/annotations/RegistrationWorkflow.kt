@@ -17,32 +17,30 @@ data class User(
     val nickname: String
 )
 
-@Workflow(name = "RegistrationWorkflow")
-class RegistrationWorkflow {
+class UserService {
 
-    @Step(order = 1)
     fun validate(request: RegistrationRequest): RegistrationRequest {
         require(request.email.contains("@"))
         require(request.password.length >= 8)
         require(request.nickname.isNotBlank())
 
+        println("회원 정보 검증 완료")
+
         return request
     }
 
-    @Step(order = 2)
-    fun checkDuplicate(
-        request: RegistrationRequest
-    ): RegistrationRequest {
+    fun checkDuplicate(request: RegistrationRequest): RegistrationRequest {
         require(request.email != "existing@example.com") {
             "이미 가입된 이메일입니다."
         }
 
+        println("이메일 중복 확인 완료")
+
         return request
     }
 
-    @Step(order = 3)
-    fun createUser(request: RegistrationRequest): User {
-        println("회원 생성")
+    fun create(request: RegistrationRequest): User {
+        println("회원 생성 완료")
 
         return User(
             id = 1L,
@@ -51,11 +49,36 @@ class RegistrationWorkflow {
         )
     }
 
-    @Step(order = 4)
     fun sendWelcomeEmail(user: User): User {
         println("${user.email}로 환영 메일 발송")
 
         return user
+    }
+}
+
+@Workflow(name = "RegistrationWorkflow")
+class RegistrationWorkflow(
+    private val service: UserService = UserService()
+) {
+
+    @Step(order = 1, name = "입력 검증")
+    fun validate(request: RegistrationRequest): RegistrationRequest {
+        return service.validate(request)
+    }
+
+    @Step(order = 2, name = "이메일 중복 확인")
+    fun checkDuplicate(request: RegistrationRequest): RegistrationRequest {
+        return service.checkDuplicate(request)
+    }
+
+    @Step(order = 3, name = "회원 생성")
+    fun createUser(request: RegistrationRequest): User {
+        return service.create(request)
+    }
+
+    @Step(order = 4, name = "환영 메일 발송")
+    fun sendWelcomeEmail(user: User): User {
+        return service.sendWelcomeEmail(user)
     }
 }
 

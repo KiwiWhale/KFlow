@@ -16,15 +16,12 @@ data class SalesReport(
     val productCount: Int
 )
 
-@Workflow(name = "AnalyticsWorkflow")
-class AnalyticsWorkflow {
+class AnalyticsService {
 
-    @Step(order = 1)
     fun filter(records: List<SalesRecord>): List<SalesRecord> {
         return records.filter { it.amount > 0 }
     }
 
-    @Step(order = 2)
     fun calculate(records: List<SalesRecord>): SalesReport {
         require(records.isNotEmpty()) {
             "분석할 데이터가 없습니다."
@@ -40,10 +37,26 @@ class AnalyticsWorkflow {
     }
 }
 
+@Workflow(name = "AnalyticsWorkflow")
+class AnalyticsWorkflow(
+    private val service: AnalyticsService
+) {
+
+    @Step(order = 1)
+    fun filter(records: List<SalesRecord>): List<SalesRecord> {
+        return service.filter(records)
+    }
+
+    @Step(order = 2)
+    fun calculate(records: List<SalesRecord>): SalesReport {
+        return service.calculate(records)
+    }
+}
+
 fun main() = runBlocking {
     val workflow = AnnotatedWorkflowFactory
         .fromInstance<List<SalesRecord>, SalesReport>(
-            AnalyticsWorkflow()
+            AnalyticsWorkflow(AnalyticsService())
         )
 
     val report = workflow.execute(

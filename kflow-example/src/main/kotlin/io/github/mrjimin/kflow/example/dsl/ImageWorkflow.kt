@@ -3,6 +3,7 @@ package io.github.mrjimin.kflow.example.dsl
 import io.github.mrjimin.kflow.KFlow
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 data class ImageFile(
@@ -11,8 +12,13 @@ data class ImageFile(
     val height: Int
 )
 
+data class ResizedImage(
+    val fileName: String,
+    val path: String
+)
+
 data class ProcessedImage(
-    val originalName: String,
+    val fileName: String,
     val thumbnailPath: String,
     val compressed: Boolean
 )
@@ -20,21 +26,26 @@ data class ProcessedImage(
 class ImageService {
 
     suspend fun validate(image: ImageFile): ImageFile {
-        require(image.width > 0 && image.height > 0)
+        require(image.width > 0)
+        require(image.height > 0)
         return image
     }
 
-    suspend fun resize(image: ImageFile): String {
-        delay(100)
-        return "/images/thumbnails/${image.fileName}"
+    suspend fun resize(image: ImageFile): ResizedImage {
+        delay(100.milliseconds)
+
+        return ResizedImage(
+            fileName = image.fileName,
+            path = "/images/thumbnails/${image.fileName}"
+        )
     }
 
-    suspend fun compress(path: String): ProcessedImage {
-        delay(100)
+    suspend fun compress(image: ResizedImage): ProcessedImage {
+        delay(100.milliseconds)
 
         return ProcessedImage(
-            originalName = path.substringAfterLast("/"),
-            thumbnailPath = path,
+            fileName = image.fileName,
+            thumbnailPath = image.path,
             compressed = true
         )
     }
@@ -46,23 +57,25 @@ fun main() = runBlocking {
     val workflow = KFlow.workflow<ImageFile, ProcessedImage>(
         "ImageWorkflow"
     ) {
-        val image = step<ImageFile>("이미지 검증") {
+        val validated = step<ImageFile>("이미지 검증") {
             execute {
                 service.validate(input)
             }
         }
 
-        val thumbnail = step<String>("썸네일 생성") {
+        val resized = step<ResizedImage>("이미지 리사이즈") {
             timeout(5.seconds)
 
             execute {
-                service.resize(image)
+                service.resize(validated)
             }
         }
 
         step<ProcessedImage>("이미지 압축") {
+            timeout(5.seconds)
+
             execute {
-                service.compress(thumbnail)
+                service.compress(resized)
             }
         }
     }

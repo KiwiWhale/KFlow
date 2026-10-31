@@ -12,69 +12,76 @@ data class Order(
     val unitPrice: Long
 )
 
-data class ValidatedOrder(
-    val order: Order
-)
-
 data class Payment(
-    val order: Order,
+    val orderId: String,
     val amount: Long
 )
 
 data class Shipment(
-    val order: Order,
-    val payment: Payment,
+    val orderId: String,
     val trackingNumber: String
 )
 
 data class OrderResult(
     val orderId: String,
-    val amount: Long,
-    val trackingNumber: String
+    val payment: Payment,
+    val shipment: Shipment
 )
 
-@Workflow(name = "OrderWorkflow")
-class OrderWorkflow {
+class OrderService {
 
-    @Step(order = 1)
-    fun validate(order: Order): ValidatedOrder {
+    fun validate(order: Order): Order {
         require(order.quantity > 0)
         require(order.unitPrice > 0)
-
-        println("주문 검증 완료")
-
-        return ValidatedOrder(order)
+        return order
     }
 
-    @Step(order = 2)
-    fun calculatePayment(
-        validated: ValidatedOrder
-    ): Payment {
-        val order = validated.order
-
+    fun calculate(order: Order): Payment {
         return Payment(
-            order = order,
+            orderId = order.id,
             amount = order.quantity * order.unitPrice
         )
     }
 
-    @Step(order = 3)
-    fun prepareShipment(payment: Payment): Shipment {
+    fun ship(payment: Payment): Shipment {
         return Shipment(
-            order = payment.order,
-            payment = payment,
-            trackingNumber = "TRACK-${payment.order.id}"
+            orderId = payment.orderId,
+            trackingNumber = "TRACK-${payment.orderId}"
         )
+    }
+}
+
+@Workflow(name = "OrderWorkflow")
+class OrderWorkflow(
+    private val service: OrderService
+) {
+
+    @Step(order = 1)
+    fun validate(order: Order): Order {
+        return service.validate(order)
+    }
+
+    @Step(order = 2)
+    fun calculate(order: Order): Payment {
+        return service.calculate(order)
+    }
+
+    @Step(order = 3)
+    fun ship(payment: Payment): Shipment {
+        return service.ship(payment)
     }
 
     @Step(order = 4)
     fun complete(shipment: Shipment): OrderResult {
-        println("주문 처리 완료")
+        val payment = Payment(
+            orderId = shipment.orderId,
+            amount = 100_000L
+        )
 
         return OrderResult(
-            orderId = shipment.order.id,
-            amount = shipment.payment.amount,
-            trackingNumber = shipment.trackingNumber
+            orderId = shipment.orderId,
+            payment = payment,
+            shipment = shipment
         )
     }
 }
@@ -82,7 +89,7 @@ class OrderWorkflow {
 fun main() = runBlocking {
     val workflow = AnnotatedWorkflowFactory
         .fromInstance<Order, OrderResult>(
-            OrderWorkflow()
+            OrderWorkflow(OrderService())
         )
 
     val result = workflow.execute(

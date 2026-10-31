@@ -16,10 +16,15 @@ data class SalesReport(
 
 class AnalyticsService {
 
-    fun filter(records: List<SalesRecord>) =
-        records.filter { it.amount > 0 }
+    fun filter(records: List<SalesRecord>): List<SalesRecord> {
+        return records.filter { it.amount > 0 }
+    }
 
     fun calculate(records: List<SalesRecord>): SalesReport {
+        require(records.isNotEmpty()) {
+            "분석할 데이터가 없습니다."
+        }
+
         val total = records.sumOf { it.amount }
 
         return SalesReport(
@@ -44,7 +49,6 @@ fun main() = runBlocking {
 
         step<SalesReport>("매출 분석") {
             execute {
-                require(filtered.isNotEmpty())
                 service.calculate(filtered)
             }
         }
@@ -54,7 +58,8 @@ fun main() = runBlocking {
         listOf(
             SalesRecord("Keyboard", 50_000),
             SalesRecord("Mouse", 30_000),
-            SalesRecord("Monitor", 300_000)
+            SalesRecord("Monitor", 300_000),
+            SalesRecord("Invalid", -100)
         )
     )
 

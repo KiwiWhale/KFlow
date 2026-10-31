@@ -17,20 +17,29 @@ data class User(
 
 class UserService {
 
-    fun validate(request: RegistrationRequest) {
+    fun validate(request: RegistrationRequest): RegistrationRequest {
         require(request.email.contains("@"))
         require(request.password.length >= 8)
         require(request.nickname.isNotBlank())
+
+        println("회원 정보 검증 완료")
+
+        return request
     }
 
-    fun checkDuplicate(email: String) {
-        // 실제 환경에서는 데이터베이스 조회
-        require(email != "existing@example.com") {
+    fun checkDuplicate(request: RegistrationRequest): RegistrationRequest {
+        require(request.email != "existing@example.com") {
             "이미 가입된 이메일입니다."
         }
+
+        println("이메일 중복 확인 완료")
+
+        return request
     }
 
     fun create(request: RegistrationRequest): User {
+        println("회원 생성 완료")
+
         return User(
             id = 1L,
             email = request.email,
@@ -38,8 +47,10 @@ class UserService {
         )
     }
 
-    fun sendWelcomeEmail(user: User) {
+    fun sendWelcomeEmail(user: User): User {
         println("${user.email}로 환영 메일 발송")
+
+        return user
     }
 }
 
@@ -49,28 +60,27 @@ fun main() = runBlocking {
     val workflow = KFlow.workflow<RegistrationRequest, User>(
         "RegistrationWorkflow"
     ) {
-        step<Unit>("입력 검증") {
+        val validated = step<RegistrationRequest>("입력 검증") {
             execute {
                 service.validate(input)
             }
         }
 
-        step<Unit>("이메일 중복 확인") {
+        val checked = step<RegistrationRequest>("이메일 중복 확인") {
             execute {
-                service.checkDuplicate(input.email)
+                service.checkDuplicate(validated)
             }
         }
 
         val user = step<User>("회원 생성") {
             execute {
-                service.create(input)
+                service.create(checked)
             }
         }
 
         step<User>("환영 메일 발송") {
             execute {
                 service.sendWelcomeEmail(user)
-                user
             }
         }
     }
