@@ -6,6 +6,7 @@ package io.github.mrjimin.kflow.annotation
 )
 @Retention(AnnotationRetention.RUNTIME)
 @MustBeDocumented
+@KFlowAnnotation
 annotation class Workflow(
     val name: String = ""
 )

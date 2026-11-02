@@ -7,6 +7,11 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
+@Target(AnnotationTarget.CLASS)
+@Retention(AnnotationRetention.RUNTIME)
+@Workflow(name = "composed-workflow")
+annotation class CustomWorkflow
+
 class WorkflowInspectorTest {
 
     private val inspector = WorkflowInspector()
@@ -22,7 +27,7 @@ class WorkflowInspectorTest {
     }
 
     @Workflow(name = "custom-workflow")
-    class CustomWorkflow {
+    class CustomNamedWorkflow {
 
         @Step(order = 20)
         fun second() {}
@@ -63,6 +68,13 @@ class WorkflowInspectorTest {
         fun execute() {}
     }
 
+    @CustomWorkflow
+    class ComposedWorkflowClass {
+
+        @Step
+        fun execute() {}
+    }
+
     @Test
     fun `기본 워크플로우 이름을 사용한다`() {
         val metadata = inspector.inspect(DefaultWorkflow::class)
@@ -72,7 +84,7 @@ class WorkflowInspectorTest {
 
     @Test
     fun `사용자 지정 워크플로우 이름을 사용한다`() {
-        val metadata = inspector.inspect(CustomWorkflow::class)
+        val metadata = inspector.inspect(CustomNamedWorkflow::class)
 
         assertEquals("custom-workflow", metadata.name)
     }
@@ -138,5 +150,13 @@ class WorkflowInspectorTest {
             "Invalid KFlow workflow 'UnannotatedWorkflow': Class must be annotated with @Workflow.",
             exception.message
         )
+    }
+
+    @Test
+    fun `커스텀 메타 어노테이션을 통해 Workflow를 생성한다`() {
+        val metadata = inspector.inspect(ComposedWorkflowClass::class)
+
+        assertEquals("composed-workflow", metadata.name)
+        assertEquals(1, metadata.steps.size)
     }
 }

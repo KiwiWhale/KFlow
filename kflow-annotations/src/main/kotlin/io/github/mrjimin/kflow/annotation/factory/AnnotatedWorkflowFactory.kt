@@ -11,15 +11,9 @@ import io.github.mrjimin.kflow.core.workflow.KFlowWorkflow
 
 object AnnotatedWorkflowFactory {
 
-    private val stepInspector = StepInspector()
+    private val workflowInspector = WorkflowInspector(StepInspector())
 
-    private val workflowInspector = WorkflowInspector(
-        stepInspector = stepInspector
-    )
-
-    private val metadataCache = WorkflowMetadataCache(
-        inspector = workflowInspector
-    )
+    private val metadataCache = WorkflowMetadataCache(workflowInspector)
 
     private val stepInvoker = StepInvoker()
 
@@ -58,7 +52,7 @@ object AnnotatedWorkflowFactory {
         targetClass: Class<*>
     ): KFlowWorkflow<I, O> {
         val metadata = metadataCache.get(
-            kClass = targetClass,
+            targetClass = targetClass,
             annotation = annotation
         )
 
@@ -73,17 +67,17 @@ object AnnotatedWorkflowFactory {
 
             var currentData: Any? = input
 
-            for (step in metadata.steps) {
+            for (stepMetadata in metadata.steps) {
                 val stepInput = currentData
 
-                currentData = step(step.name) {
+                currentData = step(stepMetadata.name) {
 
-                    step.timeout?.let(::timeout)
-                    step.retryPolicy?.let(::retry)
+                    stepMetadata.timeout?.let(::timeout)
+                    stepMetadata.retryPolicy?.let(::retry)
 
                     execute {
                         stepInvoker.invoke(
-                            metadata = step,
+                            metadata = stepMetadata,
                             instance = instance,
                             input = stepInput
                         )

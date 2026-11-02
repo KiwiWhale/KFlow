@@ -15,18 +15,17 @@ internal class WorkflowMetadataCache(
         }
     }
 
-    fun get(kClass: Class<*>): WorkflowMetadata =
-        cache.get(kClass)
+    fun get(targetClass: KClass<*>): WorkflowMetadata {
+        return get(targetClass.java)
+    }
 
-    fun get(kClass: KClass<*>): WorkflowMetadata =
-        cache.get(kClass.java)
+    fun get(targetClass: Class<*>): WorkflowMetadata {
+        return cache.get(targetClass)
+    }
 
-    fun get(
-        kClass: Class<*>,
-        annotation: Workflow
-    ): WorkflowMetadata {
+    fun get(targetClass: Class<*>, annotation: Workflow): WorkflowMetadata {
         return inspector.inspect(
-            kClass = kClass.kotlin,
+            kClass = targetClass.kotlin,
             annotation = annotation
         )
     }

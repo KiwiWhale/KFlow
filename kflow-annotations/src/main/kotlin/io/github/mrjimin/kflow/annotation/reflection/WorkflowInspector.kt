@@ -2,9 +2,9 @@ package io.github.mrjimin.kflow.annotation.reflection
 
 import io.github.mrjimin.kflow.annotation.Workflow
 import io.github.mrjimin.kflow.annotation.exception.InvalidWorkflowException
+import io.github.mrjimin.kflow.annotation.exception.KFlowAnnotationException
 import io.github.mrjimin.kflow.annotation.metadata.WorkflowMetadata
 import kotlin.reflect.KClass
-import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.memberFunctions
 
 internal class WorkflowInspector(
@@ -12,16 +12,23 @@ internal class WorkflowInspector(
 ) {
 
     fun inspect(kClass: KClass<*>): WorkflowMetadata {
-        val annotation = kClass.findAnnotation<Workflow>()
-            ?: throw InvalidWorkflowException(
-                kClass.simpleName ?: "Anonymous",
-                "Class must be annotated with @Workflow."
+        val annotation = try {
+            AnnotationResolver.find(
+                annotations = kClass.annotations.toTypedArray(),
+                target = Workflow::class
             )
-
-        return inspect(
-            kClass = kClass,
-            annotation = annotation
+        } catch (exception: IllegalArgumentException) {
+            throw InvalidWorkflowException(
+                kClass.simpleName ?: "Anonymous",
+                "Multiple @Workflow annotations were found.",
+                exception
+            )
+        } ?: throw InvalidWorkflowException(
+            kClass.simpleName ?: "Anonymous",
+            "Class must be annotated with @Workflow."
         )
+
+        return inspect(kClass, annotation)
     }
 
     fun inspect(
@@ -32,8 +39,17 @@ internal class WorkflowInspector(
             kClass.simpleName ?: "AnonymousWorkflow"
         }
 
-        val steps = kClass.memberFunctions
-            .mapNotNull(stepInspector::inspect)
+        val steps = try {
+            kClass.memberFunctions.mapNotNull(stepInspector::inspect)
+        } catch (exception: KFlowAnnotationException) {
+            throw exception
+        } catch (exception: Exception) {
+            throw InvalidWorkflowException(
+                workflowName,
+                "Failed to inspect workflow steps.",
+                exception
+            )
+        }
 
         if (steps.isEmpty()) {
             throw InvalidWorkflowException(

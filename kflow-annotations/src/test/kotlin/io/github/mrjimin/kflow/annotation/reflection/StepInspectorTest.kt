@@ -6,6 +6,15 @@ import io.github.mrjimin.kflow.annotation.exception.InvalidStepException
 import kotlin.reflect.full.memberFunctions
 import kotlin.test.*
 
+@Target(AnnotationTarget.FUNCTION)
+@Retention(AnnotationRetention.RUNTIME)
+@Step(
+    name = "custom-step",
+    order = 5,
+    timeoutMillis = 1000
+)
+annotation class CustomStep
+
 class StepInspectorTest {
 
     private val inspector = StepInspector()
@@ -38,6 +47,12 @@ class StepInspectorTest {
             )
         )
         fun retryStep() {}
+    }
+
+    class CustomSteps {
+
+        @CustomStep
+        fun execute() {}
     }
 
     @Test
@@ -134,5 +149,18 @@ class StepInspectorTest {
         assertFailsWith<InvalidStepException> {
             inspector.inspect(function)
         }
+    }
+
+    @Test
+    fun `커스텀 메타 어노테이션을 통해 Step 메타데이터를 생성한다`() {
+        val function = CustomSteps::class.memberFunctions
+            .first { it.name == "execute" }
+
+        val metadata = inspector.inspect(function)
+
+        assertNotNull(metadata)
+        assertEquals("custom-step", metadata.name)
+        assertEquals(5, metadata.order)
+        assertEquals(1000, metadata.timeout?.inWholeMilliseconds)
     }
 }

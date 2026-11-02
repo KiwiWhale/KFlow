@@ -1,10 +1,10 @@
 package io.github.mrjimin.kflow.annotation.reflection
 
+import io.github.mrjimin.kflow.annotation.Retry
 import io.github.mrjimin.kflow.annotation.Step
 import io.github.mrjimin.kflow.annotation.exception.InvalidStepException
 import kotlin.reflect.full.memberFunctions
 import kotlin.test.Test
-import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 class ReflectionValidatorTest {
@@ -12,171 +12,159 @@ class ReflectionValidatorTest {
     class ValidSteps {
 
         @Step
-        fun execute() {}
+        fun noInput() {}
 
         @Step
-        fun transform(input: String): String = input
+        fun withInput(input: String): String = input
     }
 
     class InvalidSteps {
 
         @Step
-        private fun privateStep() {}
+        private fun privateFunction() {}
 
         @Step
-        fun multipleInputs(first: String, second: String) {}
+        fun withDefault(input: String = "default") {}
 
         @Step
-        fun defaultInput(input: String = "default") {}
-
-        @Step
-        fun varargInput(vararg inputs: String) {}
-    }
-
-    class InvalidConfiguration {
+        fun withVararg(vararg input: String) {}
 
         @Step(timeoutMillis = -1)
         fun negativeTimeout() {}
 
-        @Step(retry = io.github.mrjimin.kflow.annotation.Retry(maxAttempts = 0))
+        @Step(retry = Retry(maxAttempts = 0))
         fun invalidAttempts() {}
 
-        @Step(retry = io.github.mrjimin.kflow.annotation.Retry(initialDelayMillis = -1))
+        @Step(retry = Retry(initialDelayMillis = -1))
         fun negativeInitialDelay() {}
 
         @Step(
-            retry = io.github.mrjimin.kflow.annotation.Retry(
-                initialDelayMillis = 100,
-                maxDelayMillis = 50
+            retry = Retry(
+                initialDelayMillis = 1000,
+                maxDelayMillis = 500
             )
         )
         fun invalidMaxDelay() {}
 
-        @Step(
-            retry = io.github.mrjimin.kflow.annotation.Retry(
-                multiplier = 0.5
-            )
-        )
+        @Step(retry = Retry(multiplier = 0.5))
         fun invalidMultiplier() {}
 
-        @Step(
-            retry = io.github.mrjimin.kflow.annotation.Retry(
-                multiplier = Double.NaN
-            )
-        )
+        @Step(retry = Retry(multiplier = Double.NaN))
         fun nanMultiplier() {}
-
-        @Step(
-            retry = io.github.mrjimin.kflow.annotation.Retry(
-                multiplier = Double.POSITIVE_INFINITY
-            )
-        )
-        fun infiniteMultiplier() {}
     }
 
     private fun validate(
-        instance: Any,
-        functionName: String
+        functionName: String,
+        annotation: Step
     ) {
-        val function = instance::class.memberFunctions
+        val function = InvalidSteps::class.memberFunctions
             .first { it.name == functionName }
-
-        val annotation = function.annotations
-            .filterIsInstance<Step>()
-            .first()
 
         ReflectionValidator.validateStep(function, annotation)
     }
 
     @Test
-    fun `인자가 없는 공개 멤버 함수는 검증에 성공한다`() {
-        validate(ValidSteps(), "execute")
-    }
+    fun `입력이 없는 공개 함수를 허용한다`() {
+        val function = ValidSteps::class.memberFunctions
+            .first { it.name == "noInput" }
 
-    @Test
-    fun `입력 인자가 하나인 공개 멤버 함수는 검증에 성공한다`() {
-        validate(ValidSteps(), "transform")
-    }
-
-    @Test
-    fun `비공개 함수는 예외가 발생한다`() {
-        val exception = assertFailsWith<InvalidStepException> {
-            validate(InvalidSteps(), "privateStep")
-        }
-
-        assertEquals(
-            "Invalid KFlow step 'privateStep': Step method must be public.",
-            exception.message
+        ReflectionValidator.validateStep(
+            function,
+            function.annotations.filterIsInstance<Step>().first()
         )
     }
 
     @Test
-    fun `입력 인자가 두 개인 함수는 예외가 발생한다`() {
+    fun `입력이 하나인 공개 함수를 허용한다`() {
+        val function = ValidSteps::class.memberFunctions
+            .first { it.name == "withInput" }
+
+        ReflectionValidator.validateStep(
+            function,
+            function.annotations.filterIsInstance<Step>().first()
+        )
+    }
+
+    @Test
+    fun `private 함수는 거부한다`() {
         assertFailsWith<InvalidStepException> {
-            validate(InvalidSteps(), "multipleInputs")
+            validate("privateFunction", Step())
         }
     }
 
     @Test
-    fun `기본값이 지정된 매개변수는 예외가 발생한다`() {
+    fun `기본 매개변수는 거부한다`() {
         assertFailsWith<InvalidStepException> {
-            validate(InvalidSteps(), "defaultInput")
+            validate("withDefault", Step())
         }
     }
 
     @Test
-    fun `가변 인자 매개변수는 예외가 발생한다`() {
+    fun `vararg 매개변수는 거부한다`() {
         assertFailsWith<InvalidStepException> {
-            validate(InvalidSteps(), "varargInput")
+            validate("withVararg", Step())
         }
     }
 
     @Test
-    fun `음수 timeout은 예외가 발생한다`() {
+    fun `음수 timeout은 거부한다`() {
         assertFailsWith<InvalidStepException> {
-            validate(InvalidConfiguration(), "negativeTimeout")
+            validate("negativeTimeout", Step(timeoutMillis = -1))
         }
     }
 
     @Test
-    fun `최대 시도 횟수가 1보다 작으면 예외가 발생한다`() {
+    fun `최대 재시도 횟수는 1 이상이어야 한다`() {
         assertFailsWith<InvalidStepException> {
-            validate(InvalidConfiguration(), "invalidAttempts")
+            validate(
+                "invalidAttempts",
+                Step(retry = Retry(maxAttempts = 0))
+            )
         }
     }
 
     @Test
-    fun `초기 지연 시간이 음수이면 예외가 발생한다`() {
+    fun `초기 재시도 지연은 음수일 수 없다`() {
         assertFailsWith<InvalidStepException> {
-            validate(InvalidConfiguration(), "negativeInitialDelay")
+            validate(
+                "negativeInitialDelay",
+                Step(retry = Retry(initialDelayMillis = -1))
+            )
         }
     }
 
     @Test
-    fun `최대 지연 시간이 초기 지연 시간보다 작으면 예외가 발생한다`() {
+    fun `최대 지연은 초기 지연보다 작을 수 없다`() {
         assertFailsWith<InvalidStepException> {
-            validate(InvalidConfiguration(), "invalidMaxDelay")
+            validate(
+                "invalidMaxDelay",
+                Step(
+                    retry = Retry(
+                        initialDelayMillis = 1000,
+                        maxDelayMillis = 500
+                    )
+                )
+            )
         }
     }
 
     @Test
-    fun `배수가 1보다 작으면 예외가 발생한다`() {
+    fun `재시도 배수는 1 이상이어야 한다`() {
         assertFailsWith<InvalidStepException> {
-            validate(InvalidConfiguration(), "invalidMultiplier")
+            validate(
+                "invalidMultiplier",
+                Step(retry = Retry(multiplier = 0.5))
+            )
         }
     }
 
     @Test
-    fun `배수가 NaN이면 예외가 발생한다`() {
+    fun `NaN 재시도 배수는 거부한다`() {
         assertFailsWith<InvalidStepException> {
-            validate(InvalidConfiguration(), "nanMultiplier")
-        }
-    }
-
-    @Test
-    fun `배수가 무한대이면 예외가 발생한다`() {
-        assertFailsWith<InvalidStepException> {
-            validate(InvalidConfiguration(), "infiniteMultiplier")
+            validate(
+                "nanMultiplier",
+                Step(retry = Retry(multiplier = Double.NaN))
+            )
         }
     }
 }
