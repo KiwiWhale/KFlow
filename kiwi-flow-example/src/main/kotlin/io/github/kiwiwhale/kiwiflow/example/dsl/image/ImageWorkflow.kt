@@ -4,10 +4,10 @@ import io.github.kiwiwhale.kiwiflow.core.KiwiFlow
 import io.github.kiwiwhale.kiwiflow.example.common.dto.ImageFile
 import io.github.kiwiwhale.kiwiflow.example.common.dto.ProcessedImage
 import io.github.kiwiwhale.kiwiflow.example.common.dto.ResizedImage
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
 
 class ImageService {
 

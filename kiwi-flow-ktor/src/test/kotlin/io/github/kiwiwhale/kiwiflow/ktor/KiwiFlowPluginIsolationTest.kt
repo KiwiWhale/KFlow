@@ -2,9 +2,13 @@ package io.github.kiwiwhale.kiwiflow.ktor
 
 import io.github.kiwiwhale.kiwiflow.core.KiwiFlow
 import io.github.kiwiwhale.kiwiflow.ktor.registry.WorkflowRegistry
-import io.ktor.server.application.*
-import io.ktor.server.testing.*
-import kotlin.test.*
+import io.ktor.server.application.install
+import io.ktor.server.testing.testApplication
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotSame
+import kotlin.test.assertTrue
 
 class KiwiFlowPluginIsolationTest {
 

@@ -2,10 +2,10 @@ package io.github.kiwiwhale.kiwiflow.core.step
 
 import io.github.kiwiwhale.kiwiflow.core.KiwiFlow
 import io.github.kiwiwhale.kiwiflow.core.policy.RetryPolicy
-import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import kotlinx.coroutines.test.runTest
 
 class StepRetryTest {
 

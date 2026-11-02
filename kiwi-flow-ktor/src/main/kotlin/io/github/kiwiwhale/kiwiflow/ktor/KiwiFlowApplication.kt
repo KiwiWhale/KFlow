@@ -2,8 +2,8 @@ package io.github.kiwiwhale.kiwiflow.ktor
 
 import io.github.kiwiwhale.kiwiflow.core.workflow.KiwiFlowWorkflow
 import io.github.kiwiwhale.kiwiflow.ktor.registry.WorkflowRegistry
-import io.ktor.server.application.*
-import io.ktor.util.*
+import io.ktor.server.application.Application
+import io.ktor.util.AttributeKey
 
 internal val KiwiFlowApplicationKey =
     AttributeKey<KiwiFlowApplication>("KiwiFlowApplication")

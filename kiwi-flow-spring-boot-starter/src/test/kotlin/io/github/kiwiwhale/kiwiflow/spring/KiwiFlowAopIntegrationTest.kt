@@ -6,15 +6,15 @@ import io.github.kiwiwhale.kiwiflow.core.workflow.KiwiFlowWorkflow
 import io.github.kiwiwhale.kiwiflow.spring.factory.SpringWorkflowFactory
 import io.github.kiwiwhale.kiwiflow.spring.registrar.KiwiFlowBeanRegistrar
 import io.github.kiwiwhale.kiwiflow.spring.registry.WorkflowRegistry
+import java.util.concurrent.atomic.AtomicInteger
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
 import org.aopalliance.intercept.MethodInterceptor
 import org.springframework.aop.framework.ProxyFactory
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.context.support.registerBean
-import java.util.concurrent.atomic.AtomicInteger
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 class KiwiFlowAopIntegrationTest {
 

@@ -3,12 +3,12 @@ package io.github.kiwiwhale.kiwiflow.spring.autoconfigure
 import io.github.kiwiwhale.kiwiflow.spring.factory.SpringWorkflowFactory
 import io.github.kiwiwhale.kiwiflow.spring.registrar.KiwiFlowBeanRegistrar
 import io.github.kiwiwhale.kiwiflow.spring.registry.WorkflowRegistry
-import org.springframework.beans.factory.getBean
-import org.springframework.boot.autoconfigure.AutoConfigurations
-import org.springframework.boot.test.context.runner.ApplicationContextRunner
 import kotlin.test.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertSame
+import org.springframework.beans.factory.getBean
+import org.springframework.boot.autoconfigure.AutoConfigurations
+import org.springframework.boot.test.context.runner.ApplicationContextRunner
 
 class KiwiFlowAutoConfigurationTest {
 

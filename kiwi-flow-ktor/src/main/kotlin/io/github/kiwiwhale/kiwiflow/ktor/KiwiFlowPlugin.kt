@@ -2,7 +2,7 @@ package io.github.kiwiwhale.kiwiflow.ktor
 
 import io.github.kiwiwhale.kiwiflow.ktor.config.KiwiFlowConfig
 import io.github.kiwiwhale.kiwiflow.ktor.registry.WorkflowRegistry
-import io.ktor.server.application.*
+import io.ktor.server.application.createApplicationPlugin
 
 val KiwiFlowPlugin = createApplicationPlugin(
     name = "KiwiFlowPlugin",

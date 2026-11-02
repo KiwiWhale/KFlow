@@ -1,7 +1,11 @@
 package io.github.kiwiwhale.kiwiflow.spring.registry
 
 import io.github.kiwiwhale.kiwiflow.core.KiwiFlow
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class WorkflowRegistryTest {
 

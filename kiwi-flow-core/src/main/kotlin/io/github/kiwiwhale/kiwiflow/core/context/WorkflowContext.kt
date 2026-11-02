@@ -1,6 +1,6 @@
 package io.github.kiwiwhale.kiwiflow.core.context
 
-import java.util.*
+import java.util.Collections
 import java.util.concurrent.ConcurrentHashMap
 
 class WorkflowContext {

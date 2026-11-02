@@ -6,11 +6,11 @@ import io.github.kiwiwhale.kiwiflow.core.exception.StepTimeoutException
 import io.github.kiwiwhale.kiwiflow.core.execution.ExecutionStatus
 import io.github.kiwiwhale.kiwiflow.core.execution.ExecutionTracker
 import io.github.kiwiwhale.kiwiflow.core.workflow.KiwiFlowWorkflowScope
+import kotlin.time.TimeSource
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeout
-import kotlin.time.TimeSource
 
 internal class Step<I, O>(
     private val name: String,

@@ -1,12 +1,12 @@
 package io.github.kiwiwhale.kiwiflow.core.policy
 
 import io.github.kiwiwhale.kiwiflow.core.KiwiFlow
-import kotlinx.coroutines.test.runTest
 import java.io.IOException
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import kotlinx.coroutines.test.runTest
 
 class RetryConditionTest {
 

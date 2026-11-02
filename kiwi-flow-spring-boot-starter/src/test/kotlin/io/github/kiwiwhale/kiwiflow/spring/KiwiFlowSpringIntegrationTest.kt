@@ -5,14 +5,14 @@ import io.github.kiwiwhale.kiwiflow.annotation.Workflow
 import io.github.kiwiwhale.kiwiflow.core.workflow.KiwiFlowWorkflow
 import io.github.kiwiwhale.kiwiflow.spring.annotation.EnableKiwiFlow
 import io.github.kiwiwhale.kiwiflow.spring.registry.WorkflowRegistry
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
 import org.springframework.beans.factory.getBean
 import org.springframework.boot.SpringBootConfiguration
 import org.springframework.boot.test.context.runner.ApplicationContextRunner
 import org.springframework.context.annotation.Bean
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 class KiwiFlowSpringIntegrationTest {
 

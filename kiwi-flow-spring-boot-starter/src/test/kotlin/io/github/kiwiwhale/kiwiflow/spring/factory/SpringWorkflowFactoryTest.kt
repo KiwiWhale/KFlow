@@ -2,10 +2,10 @@ package io.github.kiwiwhale.kiwiflow.spring.factory
 
 import io.github.kiwiwhale.kiwiflow.annotation.Step
 import io.github.kiwiwhale.kiwiflow.annotation.Workflow
-import kotlinx.coroutines.runBlocking
-import org.springframework.core.annotation.AnnotatedElementUtils
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlinx.coroutines.runBlocking
+import org.springframework.core.annotation.AnnotatedElementUtils
 
 class SpringWorkflowFactoryTest {
 

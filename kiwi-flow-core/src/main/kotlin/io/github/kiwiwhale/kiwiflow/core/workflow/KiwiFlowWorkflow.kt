@@ -5,10 +5,10 @@ import io.github.kiwiwhale.kiwiflow.core.execution.ExecutionListener
 import io.github.kiwiwhale.kiwiflow.core.execution.ExecutionResult
 import io.github.kiwiwhale.kiwiflow.core.execution.ExecutionStatus
 import io.github.kiwiwhale.kiwiflow.core.execution.ExecutionTracker
-import kotlinx.coroutines.CancellationException
-import java.util.*
+import java.util.UUID
 import kotlin.time.Duration
 import kotlin.time.TimeSource
+import kotlinx.coroutines.CancellationException
 
 class KiwiFlowWorkflow<I, O> internal constructor(
     val name: String,

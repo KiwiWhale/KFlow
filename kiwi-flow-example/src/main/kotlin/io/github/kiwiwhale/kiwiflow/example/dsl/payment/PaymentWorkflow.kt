@@ -4,8 +4,8 @@ import io.github.kiwiwhale.kiwiflow.core.KiwiFlow
 import io.github.kiwiwhale.kiwiflow.core.policy.RetryPolicy
 import io.github.kiwiwhale.kiwiflow.example.common.dto.PaymentReceipt
 import io.github.kiwiwhale.kiwiflow.example.common.dto.PaymentRequest
-import kotlinx.coroutines.runBlocking
 import kotlin.time.Duration.Companion.milliseconds
+import kotlinx.coroutines.runBlocking
 
 class PaymentGateway(
     private val failureCount: Int = 3

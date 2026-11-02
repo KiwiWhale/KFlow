@@ -4,11 +4,11 @@ import io.github.kiwiwhale.kiwiflow.annotation.Step
 import io.github.kiwiwhale.kiwiflow.annotation.Workflow
 import io.github.kiwiwhale.kiwiflow.spring.factory.SpringWorkflowFactory
 import io.github.kiwiwhale.kiwiflow.spring.registry.WorkflowRegistry
-import org.springframework.context.annotation.AnnotationConfigApplicationContext
-import org.springframework.context.support.registerBean
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import org.springframework.context.annotation.AnnotationConfigApplicationContext
+import org.springframework.context.support.registerBean
 
 class KiwiFlowMultipleWorkflowTest {
 

@@ -6,9 +6,9 @@ import io.github.kiwiwhale.kiwiflow.annotation.factory.AnnotatedWorkflowFactory
 import io.github.kiwiwhale.kiwiflow.example.common.dto.ImageFile
 import io.github.kiwiwhale.kiwiflow.example.common.dto.ProcessedImage
 import io.github.kiwiwhale.kiwiflow.example.common.dto.ResizedImage
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import kotlin.time.Duration.Companion.milliseconds
 
 class ImageService {
 

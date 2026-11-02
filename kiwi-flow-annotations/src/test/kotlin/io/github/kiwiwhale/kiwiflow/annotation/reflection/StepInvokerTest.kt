@@ -2,12 +2,12 @@ package io.github.kiwiwhale.kiwiflow.annotation.reflection
 
 import io.github.kiwiwhale.kiwiflow.annotation.Step
 import io.github.kiwiwhale.kiwiflow.annotation.metadata.StepMetadata
-import kotlinx.coroutines.runBlocking
 import kotlin.reflect.full.memberFunctions
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
+import kotlinx.coroutines.runBlocking
 
 class StepInvokerTest {
 
