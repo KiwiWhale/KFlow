@@ -101,3 +101,58 @@ jobs:
             --title "$TAG" \
             --generate-notes \
             --target "$GITHUB_SHA"
+
+      - name: Trigger JitPack Build
+        run: |
+          URL="https://jitpack.io/com/github/KiwiWhale/kiwi-flow/$TAG/build.log"
+
+          echo "Triggering JitPack build for $TAG..."
+
+          curl -sS "$URL" -o /tmp/jitpack.log || true
+
+          echo "JitPack build requested."
+
+      - name: Verify JitPack Build
+        run: |
+          URL="https://jitpack.io/com/github/KiwiWhale/kiwi-flow/$TAG/build.log"
+
+          echo "Waiting for JitPack build: $TAG"
+
+          for i in {1..25}; do
+            STATUS=$(curl -sS -L -o /tmp/jitpack.log \
+              -w "%{http_code}" "$URL" || true)
+
+            if [ "$STATUS" = "200" ]; then
+
+              if grep -qi "BUILD SUCCESSFUL" /tmp/jitpack.log; then
+                echo "JitPack build successful!"
+                exit 0
+              fi
+
+              if grep -qiE "BUILD FAILED|BUILD FAILURE" /tmp/jitpack.log; then
+                echo "::error::JitPack build failed."
+                cat /tmp/jitpack.log
+                exit 1
+              fi
+            fi
+
+            echo "JitPack is still building... ($i/25)"
+            sleep 30
+          done
+
+          echo "::error::JitPack build verification timed out."
+          cat /tmp/jitpack.log
+          exit 1
+
+      - name: Publish Summary
+        if: success()
+        run: |
+          {
+            echo "## KiwiFlow Release"
+            echo ""
+            echo "- Version: \`$TAG\`"
+            echo "- GitHub Release: https://github.com/KiwiWhale/kiwi-flow/releases/tag/$TAG"
+            echo "- JitPack: https://jitpack.io/#KiwiWhale/kiwi-flow/$TAG"
+            echo ""
+            echo "Build and publication verification completed successfully."
+          } >> "$GITHUB_STEP_SUMMARY"
