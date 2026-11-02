@@ -1,4 +1,4 @@
-name: KFlow CI
+name: KiwiFlow CI
 
 on:
   push:

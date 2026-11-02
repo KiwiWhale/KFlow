@@ -1,4 +1,4 @@
-name: Publish KFlow
+name: Publish KiwiFlow
 
 on:
   workflow_dispatch:
@@ -12,7 +12,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: kflow-publish
+  group: kiwi-flow-publish
   cancel-in-progress: false
 
 jobs:
@@ -72,10 +72,10 @@ jobs:
         run: |
           mapfile -t assets < <(
             find \
-              kflow-core/build/libs \
-              kflow-annotations/build/libs \
-              kflow-spring-boot-starter/build/libs \
-              kflow-ktor/build/libs \
+              kiwi-flow-core/build/libs \
+              kiwi-flow-annotations/build/libs \
+              kiwi-flow-spring-boot-starter/build/libs \
+              kiwi-flow-ktor/build/libs \
               -maxdepth 1 \
               -type f \
               -name '*.jar' \
@@ -88,7 +88,6 @@ jobs:
           fi
 
           printf '%s\n' "${assets[@]}"
-
           printf '%s\n' "${assets[@]}" > release-assets.txt
 
       - name: Create GitHub Release
@@ -99,6 +98,6 @@ jobs:
 
           gh release create "$TAG" \
             "${assets[@]}" \
-            --title "KFlow $TAG" \
+            --title "KiwiFlow $TAG" \
             --generate-notes \
             --target "$GITHUB_SHA"

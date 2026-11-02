@@ -2,7 +2,7 @@ plugins {
     alias(libs.plugins.kotlin.jvm) apply false
 }
 
-group = "io.github.mrjimin.kflow"
+group = "io.github.kiwiwhale.kiwiflow"
 version = "1.0-SNAPSHOT"
 
 allprojects {
@@ -18,7 +18,7 @@ subprojects {
     pluginManager.apply("java-library")
     pluginManager.apply("org.jetbrains.kotlin.jvm")
 
-    if (name != "kflow-example") {
+    if (name != "kiwi-flow-example") {
         pluginManager.apply("maven-publish")
 
         extensions.configure<JavaPluginExtension> {

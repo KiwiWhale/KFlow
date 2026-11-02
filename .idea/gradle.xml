@@ -10,11 +10,11 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
-            <option value="$PROJECT_DIR$/kflow-annotations" />
-            <option value="$PROJECT_DIR$/kflow-core" />
-            <option value="$PROJECT_DIR$/kflow-example" />
-            <option value="$PROJECT_DIR$/kflow-ktor" />
-            <option value="$PROJECT_DIR$/kflow-spring-boot-starter" />
+            <option value="$PROJECT_DIR$/kiwi-flow-annotations" />
+            <option value="$PROJECT_DIR$/kiwi-flow-core" />
+            <option value="$PROJECT_DIR$/kiwi-flow-example" />
+            <option value="$PROJECT_DIR$/kiwi-flow-ktor" />
+            <option value="$PROJECT_DIR$/kiwi-flow-spring-boot-starter" />
           </set>
         </option>
       </GradleProjectSettings>

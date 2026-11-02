@@ -1,0 +1,86 @@
+package io.github.kiwiwhale.kiwiflow.example.annotations.order
+
+import io.github.kiwiwhale.kiwiflow.annotation.Step
+import io.github.kiwiwhale.kiwiflow.annotation.Workflow
+import io.github.kiwiwhale.kiwiflow.annotation.factory.AnnotatedWorkflowFactory
+import io.github.kiwiwhale.kiwiflow.example.common.dto.Order
+import io.github.kiwiwhale.kiwiflow.example.common.dto.OrderResult
+import io.github.kiwiwhale.kiwiflow.example.common.dto.Payment
+import io.github.kiwiwhale.kiwiflow.example.common.dto.Shipment
+import kotlinx.coroutines.runBlocking
+
+class OrderService {
+
+    fun validate(order: Order): Order {
+        require(order.quantity > 0)
+        require(order.unitPrice > 0)
+        return order
+    }
+
+    fun calculate(order: Order): Payment {
+        return Payment(
+            orderId = order.id,
+            amount = order.quantity * order.unitPrice
+        )
+    }
+
+    fun ship(payment: Payment): Shipment {
+        return Shipment(
+            orderId = payment.orderId,
+            trackingNumber = "TRACK-${payment.orderId}"
+        )
+    }
+}
+
+@Workflow(name = "OrderWorkflow")
+class OrderWorkflow(
+    private val service: OrderService
+) {
+
+    @Step(order = 1)
+    fun validate(order: Order): Order {
+        return service.validate(order)
+    }
+
+    @Step(order = 2)
+    fun calculate(order: Order): Payment {
+        return service.calculate(order)
+    }
+
+    @Step(order = 3)
+    fun ship(payment: Payment): Shipment {
+        return service.ship(payment)
+    }
+
+    @Step(order = 4)
+    fun complete(shipment: Shipment): OrderResult {
+        val payment = Payment(
+            orderId = shipment.orderId,
+            amount = 100_000L
+        )
+
+        return OrderResult(
+            orderId = shipment.orderId,
+            payment = payment,
+            shipment = shipment
+        )
+    }
+}
+
+fun main() = runBlocking {
+    val workflow = AnnotatedWorkflowFactory
+        .fromInstance<Order, OrderResult>(
+            OrderWorkflow(OrderService())
+        )
+
+    val result = workflow.execute(
+        Order(
+            id = "ORDER-001",
+            productName = "Keyboard",
+            quantity = 2,
+            unitPrice = 50_000
+        )
+    )
+
+    println(result)
+}
