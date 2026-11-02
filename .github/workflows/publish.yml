@@ -29,8 +29,8 @@ jobs:
 
       - name: Check Branch
         run: |
-          if [[ "$GITHUB_REF" != "refs/heads/master" ]]; then
-            echo "::error::Publishing is only allowed from master."
+          if [[ "$GITHUB_REF" != "refs/heads/main" ]]; then
+            echo "::error::Publishing is only allowed from main."
             exit 1
           fi
 
