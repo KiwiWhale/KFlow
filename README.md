@@ -1,0 +1,137 @@
+# kiwi-flow
+
+[![JitPack](https://jitpack.io/v/KiwiWhale/kiwi-flow.svg)](https://jitpack.io/#KiwiWhale/kiwi-flow) 
+[![GitHub License](https://img.shields.io/github/license/KiwiWhale/kiwi-flow?style=flat-square)](LICENSE)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.4.20-blue.svg?logo=kotlin)](https://kotlinlang.org)
+
+**A lightweight and extensible workflow engine for Kotlin.**
+
+kiwi-flow is a lightweight workflow engine for defining and executing workflows in Kotlin applications.
+
+It provides a Kotlin-first DSL and an annotation-based API, allowing developers to define workflows in a clean, readable, and flexible way.
+
+## Features
+
+- Kotlin-first DSL for workflow definitions
+- Annotation-based workflow definitions
+- Configurable retry policies
+- Modular and extensible architecture
+- Ktor and Spring Boot integrations
+
+## Why kiwi-flow?
+
+kiwi-flow aims to provide a simple and flexible way to define and execute workflows in Kotlin applications.
+
+- **Kotlin-first:** Express workflows using an intuitive Kotlin DSL.
+- **Annotation-based:** Define workflows using familiar Kotlin annotations.
+- **Extensible:** Integrate with frameworks such as Ktor and Spring Boot.
+- **Configurable:** Customize workflow execution behavior with retry policies.
+- **Modular:** Use only the modules you need.
+
+## Installation
+
+Add the JitPack repository to your `build.gradle.kts`:
+
+```kotlin
+repositories {
+    maven("https://jitpack.io")
+}
+```
+
+Add the dependencies for the APIs you want to use:
+
+```kotlin
+dependencies {
+    // DSL
+    implementation("com.github.KiwiWhale.kiwi-flow:kiwi-flow-core:VERSION")
+
+    // Annotation-based API
+    implementation("com.github.KiwiWhale.kiwi-flow:kiwi-flow-annotations:VERSION")
+}
+```
+
+Replace `VERSION` with the desired release version.
+
+## Quick Start
+
+For more examples, check out [kiwi-flow-example](kiwi-flow-example).
+
+### DSL
+
+Define a workflow using the Kotlin DSL:
+
+```kotlin
+val workflow = KiwiFlow.workflow<Int, Int>("Calculation") {
+    step("Multiply by 2") {
+        execute { input * 2 }
+    }
+}
+
+val result = workflow.execute(10)
+
+println(result) // 20
+```
+
+### Annotation-based
+
+Alternatively, define workflows using annotations:
+
+```kotlin
+@Workflow(name = "Calculation")
+class CalculationWorkflow {
+
+    @Step(name = "Multiply by 2")
+    fun multiply(input: Int): Int = input * 2
+}
+
+val workflow = AnnotatedWorkflowFactory
+    .fromInstance<Int, Int>(CalculationWorkflow())
+
+val result = workflow.execute(10)
+
+println(result) // 20
+```
+
+Both approaches provide different ways to define workflows while using the same execution model.
+
+## Project Structure
+
+| Module                          | Description                           |
+|---------------------------------|---------------------------------------|
+| `kiwi-flow-core`                | Core workflow implementation and DSL  |
+| `kiwi-flow-annotations`         | Annotation-based workflow definitions |
+| `kiwi-flow-ktor`                | Ktor integration                      |
+| `kiwi-flow-spring-boot-starter` | Spring Boot integration               |
+| `kiwi-flow-example`             | Usage examples                        |
+
+## Building
+
+Clone the repository:
+
+```bash
+git clone https://github.com/KiwiWhale/kiwi-flow.git
+cd kiwi-flow
+```
+
+Build the project:
+
+```bash
+./gradlew build
+```
+
+Run tests:
+
+```bash
+./gradlew test
+```
+
+## Project Status
+
+kiwi-flow is currently under active development.
+
+APIs and implementation details are subject to change
+as the project evolves.
+
+## License
+
+kiwi-flow is licensed under the [Apache License 2.0](LICENSE).
