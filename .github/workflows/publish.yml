@@ -1,4 +1,4 @@
-name: Publish KiwiFlow
+name: Publish
 
 on:
   workflow_dispatch:
