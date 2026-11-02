@@ -48,18 +48,12 @@ class ImageWorkflow(
         return service.validate(image)
     }
 
-    @Step(
-        order = 2,
-        timeoutMillis = 5000
-    )
+    @Step(order = 2, timeoutMillis = 5000)
     suspend fun resize(image: ImageFile): ResizedImage {
         return service.resize(image)
     }
 
-    @Step(
-        order = 3,
-        timeoutMillis = 5000
-    )
+    @Step(order = 3, timeoutMillis = 5000)
     suspend fun compress(image: ResizedImage): ProcessedImage {
         return service.compress(image)
     }

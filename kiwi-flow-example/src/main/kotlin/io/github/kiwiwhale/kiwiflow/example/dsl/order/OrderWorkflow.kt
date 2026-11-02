@@ -33,8 +33,9 @@ class OrderService {
 fun main() = runBlocking {
     val service = OrderService()
 
-    val workflow = KiwiFlow.workflow<Order, OrderResult>("OrderWorkflow") {
-
+    val workflow = KiwiFlow.workflow<Order, OrderResult>(
+        "OrderWorkflow"
+    ) {
         val validated = step<Order>("Validate Order") {
             execute {
                 service.validate(input)
