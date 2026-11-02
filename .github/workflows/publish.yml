@@ -43,7 +43,7 @@ jobs:
             exit 1
           fi
 
-          echo "TAG=v$VERSION" >> "$GITHUB_ENV"
+          echo "TAG=$VERSION" >> "$GITHUB_ENV"
 
       - name: Check Existing Tag
         run: |
