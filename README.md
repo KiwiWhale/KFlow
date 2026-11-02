@@ -104,6 +104,24 @@ Both approaches provide different ways to define workflows while using the same 
 | `kiwi-flow-spring-boot-starter` | Spring Boot integration               |
 | `kiwi-flow-example`             | Usage examples                        |
 
+## DSL vs Annotation-based API
+
+kiwi-flow provides two ways to define workflows.
+
+| Feature               | DSL                     | Annotation-based     |
+|-----------------------|-------------------------|----------------------|
+| Workflow definition   | Programmatic            | Declarative          |
+| Step definition       | `step { }`              | `@Step`              |
+| Workflow declaration  | `KiwiFlow.workflow { }` | `@Workflow`          |
+| Execution             | `workflow.execute()`    | `workflow.execute()` |
+| Retry configuration   | `retry()`               | `@Retry`             |
+| Timeout configuration | `timeout()`             | `timeoutMillis`      |
+| Dependency injection  | Explicit                | Constructor-based    |
+
+Choose the DSL when you prefer programmatic workflow composition and explicit control over workflow definitions.
+
+Choose the annotation-based API when you prefer defining workflows through classes and annotations.
+
 ## Building
 
 Clone the repository:
