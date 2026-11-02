@@ -57,33 +57,46 @@ class KiwiFlowWorkflow<I, O> internal constructor(
                 duration = duration,
                 tracker = tracker
             )
-
         } catch (exception: CancellationException) {
             throw exception
-
         } catch (exception: Exception) {
-            val duration = startedAt.elapsedNow()
+            handleFailure(
+                exception = exception,
+                executionId = executionId,
+                startedAt = startedAt,
+                tracker = tracker
+            )
+        }
+    }
 
-            val error = WorkflowExecutionException(
+    private suspend fun handleFailure(
+        exception: Exception,
+        executionId: String,
+        startedAt: TimeSource.Monotonic.ValueTimeMark,
+        tracker: ExecutionTracker
+    ): ExecutionResult<O> {
+        val duration = startedAt.elapsedNow()
+
+        val error = exception as? WorkflowExecutionException
+            ?: WorkflowExecutionException(
                 executionId = executionId,
                 workflowName = name,
                 cause = exception
             )
 
-            tracker.workflowFailed(
-                duration = duration,
-                error = error
-            )
+        tracker.workflowFailed(
+            duration = duration,
+            error = error
+        )
 
-            createResult(
-                executionId = executionId,
-                status = ExecutionStatus.FAILED,
-                value = null,
-                duration = duration,
-                tracker = tracker,
-                error = error
-            )
-        }
+        return createResult(
+            executionId = executionId,
+            status = ExecutionStatus.FAILED,
+            value = null,
+            duration = duration,
+            tracker = tracker,
+            error = error
+        )
     }
 
     private suspend fun createResult(

@@ -1,6 +1,6 @@
 package io.github.kiwiwhale.kiwiflow.core.exception
 
-class WorkflowException(
+open class WorkflowException(
     val workflowName: String,
     message: String,
     cause: Throwable? = null
