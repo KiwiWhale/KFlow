@@ -75,5 +75,5 @@ fun main() = runBlocking {
         ImageFile("photo.png", 1920, 1080)
     )
 
-    println("이미지 처리 완료: $result")
+    println("Image processing completed: $result")
 }

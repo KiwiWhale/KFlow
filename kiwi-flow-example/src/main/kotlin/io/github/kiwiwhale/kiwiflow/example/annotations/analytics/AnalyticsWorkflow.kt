@@ -15,7 +15,7 @@ class AnalyticsService {
 
     fun calculate(records: List<SalesRecord>): SalesReport {
         require(records.isNotEmpty()) {
-            "분석할 데이터가 없습니다."
+            "There is no data to analyze."
         }
 
         val total = records.sumOf { it.amount }
@@ -59,5 +59,5 @@ fun main() = runBlocking {
         )
     )
 
-    println("분석 결과: $report")
+    println("Analytics Report: $report")
 }

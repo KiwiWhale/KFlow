@@ -43,13 +43,13 @@ fun main() = runBlocking {
     val workflow = KiwiFlow.workflow<ImageFile, ProcessedImage>(
         "ImageWorkflow"
     ) {
-        val validated = step<ImageFile>("이미지 검증") {
+        val validated = step<ImageFile>("Validate Image") {
             execute {
                 service.validate(input)
             }
         }
 
-        val resized = step<ResizedImage>("이미지 리사이즈") {
+        val resized = step<ResizedImage>("Resize Image") {
             timeout(5.seconds)
 
             execute {
@@ -57,7 +57,7 @@ fun main() = runBlocking {
             }
         }
 
-        step<ProcessedImage>("이미지 압축") {
+        step<ProcessedImage>("Compress Image") {
             timeout(5.seconds)
 
             execute {
@@ -70,5 +70,5 @@ fun main() = runBlocking {
         ImageFile("photo.png", 1920, 1080)
     )
 
-    println("이미지 처리 완료: $result")
+    println("Image processing completed: $result")
 }

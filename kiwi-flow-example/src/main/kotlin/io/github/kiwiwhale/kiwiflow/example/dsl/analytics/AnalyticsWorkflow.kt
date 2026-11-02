@@ -13,7 +13,7 @@ class AnalyticsService {
 
     fun calculate(records: List<SalesRecord>): SalesReport {
         require(records.isNotEmpty()) {
-            "분석할 데이터가 없습니다."
+            "There is no data to analyze."
         }
 
         val total = records.sumOf { it.amount }
@@ -32,13 +32,13 @@ fun main() = runBlocking {
     val workflow = KiwiFlow.workflow<List<SalesRecord>, SalesReport>(
         "AnalyticsWorkflow"
     ) {
-        val filtered = step<List<SalesRecord>>("데이터 정제") {
+        val filtered = step<List<SalesRecord>>("Filter Sales Records") {
             execute {
                 service.filter(input)
             }
         }
 
-        step<SalesReport>("매출 분석") {
+        step<SalesReport>("Analyze Sales") {
             execute {
                 service.calculate(filtered)
             }
@@ -54,5 +54,5 @@ fun main() = runBlocking {
         )
     )
 
-    println("분석 결과: $report")
+    println("Analytics Report: $report")
 }

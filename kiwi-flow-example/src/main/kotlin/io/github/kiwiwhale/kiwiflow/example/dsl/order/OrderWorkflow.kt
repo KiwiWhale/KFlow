@@ -35,25 +35,25 @@ fun main() = runBlocking {
 
     val workflow = KiwiFlow.workflow<Order, OrderResult>("OrderWorkflow") {
 
-        val validated = step<Order>("주문 검증") {
+        val validated = step<Order>("Validate Order") {
             execute {
                 service.validate(input)
             }
         }
 
-        val payment = step<Payment>("결제 금액 계산") {
+        val payment = step<Payment>("Calculate Payment") {
             execute {
                 service.calculate(validated)
             }
         }
 
-        val shipment = step<Shipment>("배송 준비") {
+        val shipment = step<Shipment>("Prepare Shipment") {
             execute {
                 service.ship(validated)
             }
         }
 
-        step<OrderResult>("주문 완료") {
+        step<OrderResult>("Complete Order") {
             execute {
                 OrderResult(
                     orderId = validated.id,

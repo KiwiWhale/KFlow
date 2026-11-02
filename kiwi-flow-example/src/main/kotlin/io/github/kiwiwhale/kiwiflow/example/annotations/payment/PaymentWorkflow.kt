@@ -19,7 +19,7 @@ class PaymentGateway(
         attempts++
 
         if (attempts < failureCount) {
-            throw IllegalStateException("결제 서버 일시 오류")
+            throw IllegalStateException("Temporary payment server error")
         }
 
         return PaymentReceipt(
@@ -45,7 +45,7 @@ class PaymentWorkflow(
         )
     )
     fun charge(request: PaymentRequest): PaymentReceipt {
-        println("결제 요청: ${request.orderId}")
+        println("Payment request: ${request.orderId}")
 
         return gateway.charge(request)
     }
@@ -64,5 +64,5 @@ fun main() = runBlocking {
         )
     )
 
-    println("결제 완료: $receipt")
+    println("Payment completed: $receipt")
 }

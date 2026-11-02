@@ -8,7 +8,7 @@ import kotlinx.coroutines.runBlocking
 @Workflow(name = "Calculation")
 class CalculationWorkflow {
 
-    @Step(order = 1)
+    @Step(name = "Multiply by 2")
     fun multiply(input: Int): Int {
         return input * 2
     }

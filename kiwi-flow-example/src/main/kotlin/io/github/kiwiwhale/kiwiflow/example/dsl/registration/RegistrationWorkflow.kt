@@ -12,23 +12,23 @@ class UserService {
         require(request.password.length >= 8)
         require(request.nickname.isNotBlank())
 
-        println("회원 정보 검증 완료")
+        println("User information validation completed")
 
         return request
     }
 
     fun checkDuplicate(request: RegistrationRequest): RegistrationRequest {
         require(request.email != "existing@example.com") {
-            "이미 가입된 이메일입니다."
+            "This email address is already registered."
         }
 
-        println("이메일 중복 확인 완료")
+        println("Email duplication check completed")
 
         return request
     }
 
     fun create(request: RegistrationRequest): User {
-        println("회원 생성 완료")
+        println("User creation completed")
 
         return User(
             id = 1L,
@@ -38,7 +38,7 @@ class UserService {
     }
 
     fun sendWelcomeEmail(user: User): User {
-        println("${user.email}로 환영 메일 발송")
+        println("Welcome email sent to ${user.email}")
 
         return user
     }
@@ -50,25 +50,25 @@ fun main() = runBlocking {
     val workflow = KiwiFlow.workflow<RegistrationRequest, User>(
         "RegistrationWorkflow"
     ) {
-        val validated = step<RegistrationRequest>("입력 검증") {
+        val validated = step<RegistrationRequest>("Validate Input") {
             execute {
                 service.validate(input)
             }
         }
 
-        val checked = step<RegistrationRequest>("이메일 중복 확인") {
+        val checked = step<RegistrationRequest>("Check Email Duplication") {
             execute {
                 service.checkDuplicate(validated)
             }
         }
 
-        val user = step<User>("회원 생성") {
+        val user = step<User>("Create User") {
             execute {
                 service.create(checked)
             }
         }
 
-        step<User>("환영 메일 발송") {
+        step<User>("Send Welcome Email") {
             execute {
                 service.sendWelcomeEmail(user)
             }
@@ -83,5 +83,5 @@ fun main() = runBlocking {
         )
     )
 
-    println("가입 완료: $user")
+    println("Registration completed: $user")
 }
