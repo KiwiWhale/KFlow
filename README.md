@@ -1,8 +1,7 @@
 # kiwi-flow
 
-[![JitPack](https://jitpack.io/v/KiwiWhale/kiwi-flow.svg)](https://jitpack.io/#KiwiWhale/kiwi-flow) 
+[![JitPack](https://jitpack.io/v/KiwiWhale/kiwi-flow.svg)](https://jitpack.io/#KiwiWhale/kiwi-flow)
 [![GitHub License](https://img.shields.io/github/license/KiwiWhale/kiwi-flow?style=flat-square)](LICENSE)
-[![Kotlin](https://img.shields.io/badge/Kotlin-2.4.20-blue.svg?logo=kotlin)](https://kotlinlang.org)
 
 **A lightweight and extensible workflow engine for Kotlin.**
 
@@ -10,13 +9,8 @@ kiwi-flow is a lightweight workflow engine for defining and executing workflows 
 
 It provides a Kotlin-first DSL and an annotation-based API, allowing developers to define workflows in a clean, readable, and flexible way.
 
-## Features
-
-- Kotlin-first DSL for workflow definitions
-- Annotation-based workflow definitions
-- Configurable retry policies
-- Modular and extensible architecture
-- Ktor and Spring Boot integrations
+> [!WARNING]
+> Early development. APIs and implementation are subject to change.
 
 ## Why kiwi-flow?
 
@@ -27,6 +21,14 @@ kiwi-flow aims to provide a simple and flexible way to define and execute workfl
 - **Extensible:** Integrate with frameworks such as Ktor and Spring Boot.
 - **Configurable:** Customize workflow execution behavior with retry policies.
 - **Modular:** Use only the modules you need.
+
+## Features
+
+- Kotlin-first DSL for workflow definitions
+- Annotation-based workflow definitions
+- Configurable retry policies
+- Modular and extensible architecture
+- Ktor and Spring Boot integrations
 
 ## Installation
 
