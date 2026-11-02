@@ -3,19 +3,9 @@ package io.github.mrjimin.kflow.example.annotations
 import io.github.mrjimin.kflow.annotation.Step
 import io.github.mrjimin.kflow.annotation.Workflow
 import io.github.mrjimin.kflow.annotation.factory.AnnotatedWorkflowFactory
+import io.github.mrjimin.kflow.example.common.dto.RegistrationRequest
+import io.github.mrjimin.kflow.example.common.dto.User
 import kotlinx.coroutines.runBlocking
-
-data class RegistrationRequest(
-    val email: String,
-    val password: String,
-    val nickname: String
-)
-
-data class User(
-    val id: Long,
-    val email: String,
-    val nickname: String
-)
 
 class UserService {
 

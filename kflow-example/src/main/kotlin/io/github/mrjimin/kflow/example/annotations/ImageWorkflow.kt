@@ -3,26 +3,12 @@ package io.github.mrjimin.kflow.example.annotations
 import io.github.mrjimin.kflow.annotation.Step
 import io.github.mrjimin.kflow.annotation.Workflow
 import io.github.mrjimin.kflow.annotation.factory.AnnotatedWorkflowFactory
+import io.github.mrjimin.kflow.example.common.dto.ImageFile
+import io.github.mrjimin.kflow.example.common.dto.ProcessedImage
+import io.github.mrjimin.kflow.example.common.dto.ResizedImage
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlin.time.Duration.Companion.milliseconds
-
-data class ImageFile(
-    val fileName: String,
-    val width: Int,
-    val height: Int
-)
-
-data class ResizedImage(
-    val fileName: String,
-    val path: String
-)
-
-data class ProcessedImage(
-    val fileName: String,
-    val thumbnailPath: String,
-    val compressed: Boolean
-)
 
 class ImageService {
 

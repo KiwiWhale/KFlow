@@ -2,18 +2,10 @@ package io.github.mrjimin.kflow.example.dsl
 
 import io.github.mrjimin.kflow.core.KFlow
 import io.github.mrjimin.kflow.core.policy.RetryPolicy
+import io.github.mrjimin.kflow.example.common.dto.PaymentReceipt
+import io.github.mrjimin.kflow.example.common.dto.PaymentRequest
 import kotlinx.coroutines.runBlocking
 import kotlin.time.Duration.Companion.milliseconds
-
-data class PaymentRequest(
-    val orderId: String,
-    val amount: Long
-)
-
-data class PaymentReceipt(
-    val transactionId: String,
-    val amount: Long
-)
 
 class PaymentGateway(
     private val failureCount: Int = 3

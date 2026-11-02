@@ -1,30 +1,11 @@
 package io.github.mrjimin.kflow.example.dsl
 
 import io.github.mrjimin.kflow.core.KFlow
+import io.github.mrjimin.kflow.example.common.dto.Order
+import io.github.mrjimin.kflow.example.common.dto.OrderResult
+import io.github.mrjimin.kflow.example.common.dto.Payment
+import io.github.mrjimin.kflow.example.common.dto.Shipment
 import kotlinx.coroutines.runBlocking
-
-data class Order(
-    val id: String,
-    val productName: String,
-    val quantity: Int,
-    val unitPrice: Long
-)
-
-data class Payment(
-    val orderId: String,
-    val amount: Long
-)
-
-data class Shipment(
-    val orderId: String,
-    val trackingNumber: String
-)
-
-data class OrderResult(
-    val orderId: String,
-    val payment: Payment,
-    val shipment: Shipment
-)
 
 class OrderService {
 

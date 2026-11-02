@@ -5,17 +5,9 @@ import io.github.mrjimin.kflow.annotation.Step
 import io.github.mrjimin.kflow.annotation.Workflow
 import io.github.mrjimin.kflow.annotation.factory.AnnotatedWorkflowFactory
 import io.github.mrjimin.kflow.core.policy.RetryJitter
+import io.github.mrjimin.kflow.example.common.dto.PaymentReceipt
+import io.github.mrjimin.kflow.example.common.dto.PaymentRequest
 import kotlinx.coroutines.runBlocking
-
-data class PaymentRequest(
-    val orderId: String,
-    val amount: Long
-)
-
-data class PaymentReceipt(
-    val transactionId: String,
-    val amount: Long
-)
 
 class PaymentGateway(
     private val failureCount: Int = 3

@@ -3,18 +3,9 @@ package io.github.mrjimin.kflow.example.annotations
 import io.github.mrjimin.kflow.annotation.Step
 import io.github.mrjimin.kflow.annotation.Workflow
 import io.github.mrjimin.kflow.annotation.factory.AnnotatedWorkflowFactory
+import io.github.mrjimin.kflow.example.common.dto.SalesRecord
+import io.github.mrjimin.kflow.example.common.dto.SalesReport
 import kotlinx.coroutines.runBlocking
-
-data class SalesRecord(
-    val product: String,
-    val amount: Long
-)
-
-data class SalesReport(
-    val totalSales: Long,
-    val averageSales: Double,
-    val productCount: Int
-)
 
 class AnalyticsService {
 
