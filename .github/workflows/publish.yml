@@ -98,6 +98,6 @@ jobs:
 
           gh release create "$TAG" \
             "${assets[@]}" \
-            --title "KiwiFlow $TAG" \
+            --title "$TAG" \
             --generate-notes \
             --target "$GITHUB_SHA"
