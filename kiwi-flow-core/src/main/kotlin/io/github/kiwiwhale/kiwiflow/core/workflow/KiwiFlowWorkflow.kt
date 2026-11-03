@@ -10,6 +10,20 @@ import kotlin.time.Duration
 import kotlin.time.TimeSource
 import kotlinx.coroutines.CancellationException
 
+/**
+ * Represents an executable KiwiFlow workflow.
+ *
+ * A workflow encapsulates its execution logic and registered listeners.
+ * Each invocation creates an independent execution context and
+ * receives a unique execution identifier.
+ *
+ * Workflow executions produce execution results containing
+ * their final status, output, duration, and step records.
+ *
+ * @param I Workflow input type.
+ * @param O Workflow output type.
+ * @property name Workflow name.
+ */
 class KiwiFlowWorkflow<I, O> internal constructor(
     val name: String,
     private val action: suspend KiwiFlowWorkflowScope<I>.() -> O,
@@ -24,9 +38,29 @@ class KiwiFlowWorkflow<I, O> internal constructor(
         }
     }
 
+    /**
+     * Executes the workflow and returns its output.
+     *
+     * @param input Input supplied to the workflow.
+     * @return Workflow output.
+     * @throws WorkflowExecutionException If workflow execution fails.
+     * @throws CancellationException If execution is cancelled.
+     */
     suspend fun execute(input: I): O =
         executeWithResult(input).getOrThrow()
 
+    /**
+     * Executes the workflow and returns detailed execution information.
+     *
+     * Unlike [execute], workflow execution failures are represented
+     * by an [ExecutionResult] rather than being thrown directly.
+     *
+     * Coroutine cancellation is still propagated.
+     *
+     * @param input Input supplied to the workflow.
+     * @return Detailed workflow execution result.
+     * @throws CancellationException If execution is cancelled.
+     */
     suspend fun executeWithResult(input: I): ExecutionResult<O> {
         val executionId = UUID.randomUUID().toString()
         val startedAt = TimeSource.Monotonic.markNow()

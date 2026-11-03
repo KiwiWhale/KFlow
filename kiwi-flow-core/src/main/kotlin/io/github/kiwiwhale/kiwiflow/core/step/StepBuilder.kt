@@ -4,12 +4,29 @@ import io.github.kiwiwhale.kiwiflow.core.policy.RetryPolicy
 import io.github.kiwiwhale.kiwiflow.core.workflow.KiwiFlowWorkflowScope
 import kotlin.time.Duration
 
+/**
+ * DSL builder for configuring an executable workflow step.
+ *
+ * Allows configuring retry behavior, execution timeout,
+ * and the step action.
+ *
+ * Each configuration can only be defined once.
+ *
+ * @param I Workflow input type.
+ * @param O Step output type.
+ */
 class StepBuilder<I, O> internal constructor() {
 
     private var action: (suspend KiwiFlowWorkflowScope<I>.() -> O)? = null
 
     private var policy = StepPolicy()
 
+    /**
+     * Configures the retry policy for this step.
+     *
+     * @param policy Retry policy to apply.
+     * @throws IllegalStateException If a retry policy was already configured.
+     */
     fun retry(policy: RetryPolicy) {
         check(this.policy.retry == null) {
             "Retry policy is already configured"
@@ -20,6 +37,14 @@ class StepBuilder<I, O> internal constructor() {
         )
     }
 
+    /**
+     * Configures the maximum execution duration for this step.
+     *
+     * @param duration Maximum execution duration.
+     * @throws IllegalStateException If a timeout was already configured.
+     * @throws IllegalArgumentException If the duration is not finite
+     * or positive.
+     */
     fun timeout(duration: Duration) {
         check(this.policy.timeout == null) {
             "Timeout is already configured"
@@ -34,6 +59,12 @@ class StepBuilder<I, O> internal constructor() {
         )
     }
 
+    /**
+     * Defines the action executed by this step.
+     *
+     * @param block Step execution logic.
+     * @throws IllegalStateException If an action was already defined.
+     */
     fun execute(block: suspend KiwiFlowWorkflowScope<I>.() -> O) {
         check(action == null) {
             "Step action is already defined"

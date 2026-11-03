@@ -11,12 +11,41 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeoutOrNull
 
+/**
+ * Internal executor responsible for running a configured workflow step.
+ *
+ * Handles step invocation, timeout enforcement, retry decisions,
+ * execution tracking, and final failure propagation.
+ *
+ * @param I Workflow input type.
+ * @param O Step output type.
+ * @property name Step name.
+ * @property action Step execution logic.
+ * @property policy Execution policies applied to this step.
+ */
 internal class Step<I, O>(
     private val name: String,
     private val action: suspend KiwiFlowWorkflowScope<I>.() -> O,
     private val policy: StepPolicy
 ) {
 
+    /**
+     * Executes the step using its configured policies.
+     *
+     * Each attempt is recorded by the execution tracker.
+     * Eligible failures are retried according to the configured policy.
+     *
+     * Coroutine cancellation is propagated without being treated
+     * as an ordinary retryable failure.
+     *
+     * @param scope Workflow execution scope.
+     * @param tracker Execution tracker.
+     * @return Result produced by the successful attempt.
+     * @throws StepException If the step fails and no retry is performed.
+     * @throws RetryExhaustedException If all retry attempts are exhausted.
+     * @throws StepTimeoutException If the step exceeds its timeout.
+     * @throws CancellationException If execution is cancelled.
+     */
     suspend fun execute(
         scope: KiwiFlowWorkflowScope<I>,
         tracker: ExecutionTracker
