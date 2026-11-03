@@ -5,7 +5,7 @@ import io.github.kiwiwhale.kiwiflow.core.exception.StepException
 import io.github.kiwiwhale.kiwiflow.core.exception.StepTimeoutException
 import io.github.kiwiwhale.kiwiflow.core.execution.ExecutionStatus
 import io.github.kiwiwhale.kiwiflow.core.execution.ExecutionTracker
-import io.github.kiwiwhale.kiwiflow.core.workflow.KiwiFlowWorkflowScope
+import io.github.kiwiwhale.kiwiflow.core.workflow.KiwiWorkflowScope
 import kotlin.time.TimeSource
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
@@ -25,7 +25,7 @@ import kotlinx.coroutines.withTimeoutOrNull
  */
 internal class Step<I, O>(
     private val name: String,
-    private val action: suspend KiwiFlowWorkflowScope<I>.() -> O,
+    private val action: suspend KiwiWorkflowScope<I>.() -> O,
     private val policy: StepPolicy
 ) {
 
@@ -47,7 +47,7 @@ internal class Step<I, O>(
      * @throws CancellationException If execution is cancelled.
      */
     suspend fun execute(
-        scope: KiwiFlowWorkflowScope<I>,
+        scope: KiwiWorkflowScope<I>,
         tracker: ExecutionTracker
     ): O {
         val retry = policy.retry
@@ -119,7 +119,7 @@ internal class Step<I, O>(
     }
 
     private suspend fun executeAction(
-        scope: KiwiFlowWorkflowScope<I>
+        scope: KiwiWorkflowScope<I>
     ): O {
         val timeout = policy.timeout
             ?: return action(scope)

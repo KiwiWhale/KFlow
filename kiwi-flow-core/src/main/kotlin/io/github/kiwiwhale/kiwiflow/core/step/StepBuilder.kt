@@ -1,7 +1,7 @@
 package io.github.kiwiwhale.kiwiflow.core.step
 
 import io.github.kiwiwhale.kiwiflow.core.policy.RetryPolicy
-import io.github.kiwiwhale.kiwiflow.core.workflow.KiwiFlowWorkflowScope
+import io.github.kiwiwhale.kiwiflow.core.workflow.KiwiWorkflowScope
 import kotlin.time.Duration
 
 /**
@@ -17,7 +17,7 @@ import kotlin.time.Duration
  */
 class StepBuilder<I, O> internal constructor() {
 
-    private var action: (suspend KiwiFlowWorkflowScope<I>.() -> O)? = null
+    private var action: (suspend KiwiWorkflowScope<I>.() -> O)? = null
 
     private var policy = StepPolicy()
 
@@ -65,7 +65,7 @@ class StepBuilder<I, O> internal constructor() {
      * @param block Step execution logic.
      * @throws IllegalStateException If an action was already defined.
      */
-    fun execute(block: suspend KiwiFlowWorkflowScope<I>.() -> O) {
+    fun execute(block: suspend KiwiWorkflowScope<I>.() -> O) {
         check(action == null) {
             "Step action is already defined"
         }

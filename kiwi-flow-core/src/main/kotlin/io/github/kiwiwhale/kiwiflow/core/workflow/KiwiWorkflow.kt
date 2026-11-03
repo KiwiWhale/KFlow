@@ -13,33 +13,50 @@ import kotlinx.coroutines.CancellationException
 /**
  * Represents an executable KiwiFlow workflow.
  *
- * A workflow encapsulates its execution logic and registered listeners.
- * Each invocation creates an independent execution context and
- * receives a unique execution identifier.
+ * A workflow encapsulates its execution logic and registered
+ * execution listeners.
  *
- * Workflow executions produce execution results containing
- * their final status, output, duration, and step records.
+ * Each invocation creates an independent execution context
+ * and receives a unique execution identifier.
+ *
+ * Workflow executions produce an [ExecutionResult] containing
+ * the final status, output, duration, and step execution records.
+ *
+ * The workflow is identified by its [key].
  *
  * @param I Workflow input type.
  * @param O Workflow output type.
- * @property name Workflow name.
+ * @property key Typed workflow identifier.
+ * @property name Name derived from [key].
+ *
+ * @see KiwiWorkflowKey
+ * @see KiwiWorkflowScope
+ * @see ExecutionResult
  */
-class KiwiFlowWorkflow<I, O> internal constructor(
-    val name: String,
-    private val action: suspend KiwiFlowWorkflowScope<I>.() -> O,
+class KiwiWorkflow<I, O> internal constructor(
+    val key: KiwiWorkflowKey<I, O>,
+    private val action: suspend KiwiWorkflowScope<I>.() -> O,
     listeners: List<ExecutionListener> = emptyList()
 ) {
 
     private val listeners = listeners.toList()
 
-    init {
-        require(name.isNotBlank()) {
-            "Workflow name cannot be blank"
-        }
-    }
+    /**
+     * Name of this workflow.
+     *
+     * The name is derived directly from [key] to ensure
+     * that workflow identification has a single source of truth.
+     */
+    val name: String
+        get() = key.name
 
     /**
      * Executes the workflow and returns its output.
+     *
+     * Unlike [executeWithResult], this method throws the
+     * workflow execution exception when execution fails.
+     *
+     * Coroutine cancellation is propagated without wrapping.
      *
      * @param input Input supplied to the workflow.
      * @return Workflow output.
@@ -52,8 +69,8 @@ class KiwiFlowWorkflow<I, O> internal constructor(
     /**
      * Executes the workflow and returns detailed execution information.
      *
-     * Unlike [execute], workflow execution failures are represented
-     * by an [ExecutionResult] rather than being thrown directly.
+     * Execution failures are represented by an [ExecutionResult]
+     * with [ExecutionStatus.FAILED] instead of being thrown directly.
      *
      * Coroutine cancellation is still propagated.
      *
@@ -61,7 +78,9 @@ class KiwiFlowWorkflow<I, O> internal constructor(
      * @return Detailed workflow execution result.
      * @throws CancellationException If execution is cancelled.
      */
-    suspend fun executeWithResult(input: I): ExecutionResult<O> {
+    suspend fun executeWithResult(
+        input: I
+    ): ExecutionResult<O> {
         val executionId = UUID.randomUUID().toString()
         val startedAt = TimeSource.Monotonic.markNow()
 
@@ -71,7 +90,7 @@ class KiwiFlowWorkflow<I, O> internal constructor(
             listeners = listeners
         )
 
-        val scope = KiwiFlowWorkflowScope(
+        val scope = KiwiWorkflowScope(
             input = input,
             tracker = tracker
         )
@@ -103,6 +122,18 @@ class KiwiFlowWorkflow<I, O> internal constructor(
         }
     }
 
+    /**
+     * Converts a workflow execution failure into an execution result.
+     *
+     * Existing [WorkflowExecutionException] instances are preserved.
+     * Other exceptions are wrapped with the current execution identifier.
+     *
+     * @param exception Exception raised during execution.
+     * @param executionId Identifier of the current execution.
+     * @param startedAt Monotonic execution start time.
+     * @param tracker Execution event and step tracker.
+     * @return Failed workflow execution result.
+     */
     private suspend fun handleFailure(
         exception: Exception,
         executionId: String,
@@ -133,6 +164,17 @@ class KiwiFlowWorkflow<I, O> internal constructor(
         )
     }
 
+    /**
+     * Creates an immutable snapshot of the workflow execution result.
+     *
+     * @param executionId Current execution identifier.
+     * @param status Final execution status.
+     * @param value Workflow output, or null on failure.
+     * @param duration Total execution duration.
+     * @param tracker Execution tracker.
+     * @param error Workflow execution error, if any.
+     * @return Workflow execution result.
+     */
     private suspend fun createResult(
         executionId: String,
         status: ExecutionStatus,
@@ -140,8 +182,8 @@ class KiwiFlowWorkflow<I, O> internal constructor(
         duration: Duration,
         tracker: ExecutionTracker,
         error: WorkflowExecutionException? = null
-    ): ExecutionResult<O> {
-        return ExecutionResult(
+    ): ExecutionResult<O> =
+        ExecutionResult(
             executionId = executionId,
             workflowName = name,
             status = status,
@@ -150,5 +192,4 @@ class KiwiFlowWorkflow<I, O> internal constructor(
             duration = duration,
             error = error
         )
-    }
 }

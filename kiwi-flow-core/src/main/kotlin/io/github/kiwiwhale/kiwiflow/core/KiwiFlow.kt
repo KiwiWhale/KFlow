@@ -1,53 +1,67 @@
 package io.github.kiwiwhale.kiwiflow.core
 
 import io.github.kiwiwhale.kiwiflow.core.execution.ExecutionListener
-import io.github.kiwiwhale.kiwiflow.core.workflow.KiwiFlowWorkflow
-import io.github.kiwiwhale.kiwiflow.core.workflow.KiwiFlowWorkflowScope
+import io.github.kiwiwhale.kiwiflow.core.workflow.KiwiWorkflow
+import io.github.kiwiwhale.kiwiflow.core.workflow.KiwiWorkflowKey
+import io.github.kiwiwhale.kiwiflow.core.workflow.KiwiWorkflowScope
 
 /**
  * Entry point for defining KiwiFlow workflows.
  *
- * Provides a DSL function for creating executable workflows
- * with an associated name and optional execution listeners.
+ * Provides DSL functions for creating executable workflows
+ * using either a typed [KiwiWorkflowKey] or a workflow name.
  *
- * Example:
- *
- * ```
- * val workflow = KiwiFlow.workflow<String, String>(
- *     name = "example"
- * ) {
- *     step("uppercase") {
- *         execute {
- *             input.uppercase()
- *         }
- *     }
- * }
- *
- * val result = workflow.execute("hello")
- * ```
+ * @see KiwiWorkflow
+ * @see KiwiWorkflowKey
  */
 object KiwiFlow {
 
     /**
-     * Creates a workflow using the KiwiFlow DSL.
+     * Creates a workflow using a typed workflow key.
      *
      * @param I Workflow input type.
      * @param O Workflow output type.
-     * @param name Non-blank workflow name.
-     * @param listeners Listeners that observe workflow lifecycle events.
-     * @param block Workflow execution logic.
-     * @return Configured executable workflow.
+     * @param key Typed workflow identifier.
+     * @param listeners Execution event listeners.
+     * @param block Workflow definition.
+     * @return Configured workflow.
+     *
+     * @throws IllegalArgumentException If the workflow key has an invalid name.
+     */
+    fun <I, O> workflow(
+        key: KiwiWorkflowKey<I, O>,
+        listeners: List<ExecutionListener> = emptyList(),
+        block: suspend KiwiWorkflowScope<I>.() -> O
+    ): KiwiWorkflow<I, O> =
+        KiwiWorkflow(
+            key = key,
+            action = block,
+            listeners = listeners
+        )
+
+    /**
+     * Creates a workflow using its name.
+     *
+     * Internally, the name is converted into a [KiwiWorkflowKey],
+     * keeping workflow creation consistent with the typed API.
+     *
+     * @param I Workflow input type.
+     * @param O Workflow output type.
+     * @param name Workflow name.
+     * @param listeners Execution event listeners.
+     * @param block Workflow definition.
+     * @return Configured workflow.
+     *
      * @throws IllegalArgumentException If the workflow name is blank.
      */
     fun <I, O> workflow(
         name: String,
         listeners: List<ExecutionListener> = emptyList(),
-        block: suspend KiwiFlowWorkflowScope<I>.() -> O
-    ): KiwiFlowWorkflow<I, O> {
-        require(name.isNotBlank()) {
-            "Workflow name cannot be blank"
-        }
-
-        return KiwiFlowWorkflow(name, block, listeners.toList())
-    }
+        block: suspend KiwiWorkflowScope<I>.() -> O
+    ): KiwiWorkflow<I, O> =
+        workflow(
+            key = KiwiWorkflowKey<I, O>(name),
+            listeners = listeners,
+            block = block
+        )
 }

@@ -12,27 +12,12 @@ import java.util.concurrent.ConcurrentHashMap
  * Values are stored using non-blank string keys and non-null objects.
  * The underlying storage is backed by [ConcurrentHashMap].
  *
- * Operations on individual keys are thread-safe. Compound operations
- * should use [getOrPut] or [update] when atomicity is required.
+ * Individual operations and supported compound operations
+ * such as [getOrPut] and [update] are atomic per key.
  *
  * Snapshots returned by [snapshot] are immutable shallow copies.
  *
- * Example:
- *
- * ```
- * val context = WorkflowContext()
- *
- * context["userId"] = "user-123"
- * context["attempts"] = 1
- *
- * val userId = context.require<String>("userId")
- *
- * context.update<Int>("attempts") { current ->
- *     (current ?: 0) + 1
- * }
- * ```
- *
- * @see KiwiFlowWorkflowScope
+ * @see KiwiWorkflowScope
  */
 class WorkflowContext {
 
@@ -169,6 +154,40 @@ class WorkflowContext {
         defaultValue: T
     ): T {
         val value = getValue(key) ?: return defaultValue
+
+        return value as? T
+            ?: throw ClassCastException("Context value '$key' is not of type ${T::class.simpleName}")
+    }
+
+    /**
+     * Retrieves the value associated with the specified key,
+     * or atomically creates and stores a new value when absent.
+     *
+     * The [defaultValue] provider is evaluated only when the key
+     * does not already exist.
+     *
+     * This operation is atomic for the specified key.
+     * Concurrent calls for the same key will use the value
+     * produced by the successful computation.
+     *
+     * If an existing value has an incompatible type,
+     * a [ClassCastException] is thrown.
+     *
+     * @param T Expected value type.
+     * @param key Context key.
+     * @param defaultValue Provider used to create a value when absent.
+     * @return Existing or newly created value.
+     * @throws IllegalArgumentException If the key is blank.
+     * @throws ClassCastException If the existing value has an incompatible type.
+     *
+     * @see getOrDefault
+     * @see putIfAbsent
+     */
+    inline fun <reified T : Any> getOrPut(
+        key: String,
+        noinline defaultValue: () -> T
+    ): T {
+        val value = getOrPutValue(key, defaultValue)
 
         return value as? T
             ?: throw ClassCastException("Context value '$key' is not of type ${T::class.simpleName}")
