@@ -2,9 +2,9 @@ package io.github.kiwiwhale.kiwiflow.spring
 
 import io.github.kiwiwhale.kiwiflow.annotation.Step
 import io.github.kiwiwhale.kiwiflow.annotation.Workflow
-import io.github.kiwiwhale.kiwiflow.core.workflow.KiwiFlowWorkflow
+import io.github.kiwiwhale.kiwiflow.core.workflow.KiwiWorkflow
+import io.github.kiwiwhale.kiwiflow.core.workflow.KiwiWorkflowRegistry
 import io.github.kiwiwhale.kiwiflow.spring.annotation.EnableKiwiFlow
-import io.github.kiwiwhale.kiwiflow.spring.registry.WorkflowRegistry
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -22,7 +22,7 @@ class KiwiFlowSpringIntegrationTest {
     @Test
     fun `EnableKFlow로 Workflow Bean이 자동 등록된다`() {
         contextRunner.run { context ->
-            val registry = context.getBean<WorkflowRegistry>()
+            val registry = context.getBean<KiwiWorkflowRegistry>()
 
             assertTrue(registry.contains("TestWorkflow"))
         }
@@ -31,14 +31,14 @@ class KiwiFlowSpringIntegrationTest {
     @Test
     fun `등록된 Workflow를 실행할 수 있다`() {
         contextRunner.run { context ->
-            val registry = context.getBean<WorkflowRegistry>()
+            val registry = context.getBean<KiwiWorkflowRegistry>()
 
             @Suppress("UNCHECKED_CAST")
-            val workflow = registry.get("TestWorkflow")
-                    as KiwiFlowWorkflow<String, String>
+            val kiwiWorkflow = registry.get("TestWorkflow")
+                    as KiwiWorkflow<String, String>
 
             val result = runBlocking {
-                workflow.execute("KFlow")
+                kiwiWorkflow.execute("KFlow")
             }
 
             assertEquals("Hello KFlow", result)
@@ -50,7 +50,7 @@ class KiwiFlowSpringIntegrationTest {
         contextRunner
             .withUserConfiguration(MetaWorkflowConfiguration::class.java)
             .run { context ->
-                val registry = context.getBean<WorkflowRegistry>()
+                val registry = context.getBean<KiwiWorkflowRegistry>()
 
                 assertTrue(registry.contains("MetaWorkflow"))
             }
@@ -61,7 +61,7 @@ class KiwiFlowSpringIntegrationTest {
         contextRunner
             .withUserConfiguration(DefaultNameConfiguration::class.java)
             .run { context ->
-                val registry = context.getBean<WorkflowRegistry>()
+                val registry = context.getBean<KiwiWorkflowRegistry>()
 
                 assertTrue(registry.contains("DefaultNameWorkflow"))
             }

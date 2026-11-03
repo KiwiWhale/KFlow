@@ -2,8 +2,8 @@ package io.github.kiwiwhale.kiwiflow.spring.registrar
 
 import io.github.kiwiwhale.kiwiflow.annotation.Step
 import io.github.kiwiwhale.kiwiflow.annotation.Workflow
+import io.github.kiwiwhale.kiwiflow.core.workflow.KiwiWorkflowRegistry
 import io.github.kiwiwhale.kiwiflow.spring.factory.SpringWorkflowFactory
-import io.github.kiwiwhale.kiwiflow.spring.registry.WorkflowRegistry
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -38,7 +38,7 @@ class KiwiFlowBeanRegistrarTest {
         }
 
         context.use {
-            val registry = it.getBean(WorkflowRegistry::class.java)
+            val registry = it.getBean(KiwiWorkflowRegistry::class.java)
 
             assertTrue(registry.contains("TestWorkflow"))
             assertEquals(setOf("TestWorkflow"), registry.names())
@@ -52,7 +52,7 @@ class KiwiFlowBeanRegistrarTest {
         }
 
         context.use {
-            val registry = it.getBean(WorkflowRegistry::class.java)
+            val registry = it.getBean(KiwiWorkflowRegistry::class.java)
 
             assertTrue(registry.contains("MetaWorkflow"))
             assertEquals(setOf("MetaWorkflow"), registry.names())
@@ -64,7 +64,7 @@ class KiwiFlowBeanRegistrarTest {
     ): AnnotationConfigApplicationContext {
         val context = AnnotationConfigApplicationContext()
 
-        val registry = WorkflowRegistry()
+        val registry = KiwiWorkflowRegistry()
         val factory = SpringWorkflowFactory()
 
         context.registerBean("testWorkflow") {

@@ -2,9 +2,9 @@ package io.github.kiwiwhale.kiwiflow.spring.registrar
 
 import io.github.kiwiwhale.kiwiflow.annotation.Step
 import io.github.kiwiwhale.kiwiflow.annotation.Workflow
-import io.github.kiwiwhale.kiwiflow.core.workflow.KiwiFlowWorkflow
+import io.github.kiwiwhale.kiwiflow.core.workflow.KiwiWorkflow
+import io.github.kiwiwhale.kiwiflow.core.workflow.KiwiWorkflowRegistry
 import io.github.kiwiwhale.kiwiflow.spring.factory.SpringWorkflowFactory
-import io.github.kiwiwhale.kiwiflow.spring.registry.WorkflowRegistry
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -30,7 +30,7 @@ class KiwiFlowInheritedWorkflowTest {
         val context = createContext()
 
         context.use {
-            val registry = it.getBean(WorkflowRegistry::class.java)
+            val registry = it.getBean(KiwiWorkflowRegistry::class.java)
 
             assertTrue(registry.contains("ParentWorkflow"))
 
@@ -46,15 +46,15 @@ class KiwiFlowInheritedWorkflowTest {
         val context = createContext()
 
         context.use {
-            val registry = it.getBean(WorkflowRegistry::class.java)
+            val registry = it.getBean(KiwiWorkflowRegistry::class.java)
 
             @Suppress("UNCHECKED_CAST")
-            val workflow = registry.get("ParentWorkflow")
-                    as KiwiFlowWorkflow<String, String>
+            val kiwiWorkflow = registry.get("ParentWorkflow")
+                    as KiwiWorkflow<String, String>
 
             assertEquals(
                 "Parent KFlow",
-                workflow.execute("KFlow")
+                kiwiWorkflow.execute("KFlow")
             )
         }
     }
@@ -62,7 +62,7 @@ class KiwiFlowInheritedWorkflowTest {
     private fun createContext(): AnnotationConfigApplicationContext {
         val context = AnnotationConfigApplicationContext()
 
-        val registry = WorkflowRegistry()
+        val registry = KiwiWorkflowRegistry()
         val factory = SpringWorkflowFactory()
 
         context.registerBean("childWorkflow") {

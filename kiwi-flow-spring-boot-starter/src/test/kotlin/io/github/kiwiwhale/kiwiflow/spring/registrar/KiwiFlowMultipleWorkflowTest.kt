@@ -2,8 +2,8 @@ package io.github.kiwiwhale.kiwiflow.spring.registrar
 
 import io.github.kiwiwhale.kiwiflow.annotation.Step
 import io.github.kiwiwhale.kiwiflow.annotation.Workflow
+import io.github.kiwiwhale.kiwiflow.core.workflow.KiwiWorkflowRegistry
 import io.github.kiwiwhale.kiwiflow.spring.factory.SpringWorkflowFactory
-import io.github.kiwiwhale.kiwiflow.spring.registry.WorkflowRegistry
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -34,7 +34,7 @@ class KiwiFlowMultipleWorkflowTest {
     fun `하나의 Bean에 선언된 여러 Workflow를 모두 등록한다`() {
         val context = AnnotationConfigApplicationContext()
 
-        val registry = WorkflowRegistry()
+        val registry = KiwiWorkflowRegistry()
         val factory = SpringWorkflowFactory()
 
         context.registerBean("multiWorkflow") {

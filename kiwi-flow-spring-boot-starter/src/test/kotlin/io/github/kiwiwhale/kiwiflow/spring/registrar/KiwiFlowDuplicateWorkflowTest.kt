@@ -2,8 +2,8 @@ package io.github.kiwiwhale.kiwiflow.spring.registrar
 
 import io.github.kiwiwhale.kiwiflow.annotation.Step
 import io.github.kiwiwhale.kiwiflow.annotation.Workflow
+import io.github.kiwiwhale.kiwiflow.core.workflow.KiwiWorkflowRegistry
 import io.github.kiwiwhale.kiwiflow.spring.factory.SpringWorkflowFactory
-import io.github.kiwiwhale.kiwiflow.spring.registry.WorkflowRegistry
 import kotlin.test.Test
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
@@ -30,7 +30,7 @@ class KiwiFlowDuplicateWorkflowTest {
     fun `서로 다른 Bean이 동일한 Workflow 이름을 사용하면 예외가 발생한다`() {
         val context = AnnotationConfigApplicationContext()
 
-        val registry = WorkflowRegistry()
+        val registry = KiwiWorkflowRegistry()
         val factory = SpringWorkflowFactory()
 
         context.registerBean("firstWorkflow") {
@@ -57,21 +57,17 @@ class KiwiFlowDuplicateWorkflowTest {
             )
         }
 
-        try {
+        context.use {
             val exception = assertFailsWith<Throwable> {
                 context.refresh()
             }
 
-            val hasDuplicateException =
-                generateSequence<Throwable>(exception) { it.cause }
-                    .any { it is IllegalArgumentException }
-
             assertTrue(
-                hasDuplicateException,
-                "중복 Workflow 등록으로 IllegalArgumentException이 발생해야 합니다."
+                generateSequence(exception) { it.cause }
+                    .any {
+                        it.message?.contains("DuplicateWorkflow") == true
+                    }
             )
-        } finally {
-            context.close()
         }
     }
 }

@@ -1,54 +1,41 @@
 package io.github.kiwiwhale.kiwiflow.spring.registrar
 
 import io.github.kiwiwhale.kiwiflow.annotation.Workflow
-import io.github.kiwiwhale.kiwiflow.core.workflow.KiwiFlowWorkflow
+import io.github.kiwiwhale.kiwiflow.core.workflow.KiwiWorkflow
+import io.github.kiwiwhale.kiwiflow.core.workflow.KiwiWorkflowKey
+import io.github.kiwiwhale.kiwiflow.core.workflow.KiwiWorkflowRegistry
 import io.github.kiwiwhale.kiwiflow.spring.factory.SpringWorkflowFactory
-import io.github.kiwiwhale.kiwiflow.spring.registry.WorkflowRegistry
 import org.springframework.aop.support.AopUtils
 import org.springframework.beans.factory.SmartInitializingSingleton
 import org.springframework.context.ApplicationContext
 import org.springframework.core.annotation.AnnotatedElementUtils
 
 /**
- * Discovers Spring-managed beans annotated with KiwiFlow's [Workflow]
- * annotation and registers them as executable workflows.
+ * Discovers Spring-managed beans annotated with [Workflow]
+ * and registers them as executable workflows.
  *
- * Workflow discovery is performed after singleton initialization
- * through [SmartInitializingSingleton].
- *
- * All discovered workflows are created before being registered.
- * Registration is performed as a single batch to avoid partial
- * registry updates when workflow names conflict.
- *
- * @property applicationContext Spring application context.
- * @property factory Factory responsible for creating workflows.
- * @property registry Registry that stores discovered workflows.
- *
- * @see SpringWorkflowFactory
- * @see WorkflowRegistry
+ * Workflow registration is delegated to Core.
  */
 class KiwiFlowBeanRegistrar(
     private val applicationContext: ApplicationContext,
     private val factory: SpringWorkflowFactory,
-    private val registry: WorkflowRegistry
+    private val registry: KiwiWorkflowRegistry
 ) : SmartInitializingSingleton {
 
     /**
      * Discovers and registers all eligible workflow beans.
      *
-     * Invoked by Spring after all regular singleton beans have
-     * been instantiated.
-     *
-     * @throws IllegalStateException If multiple workflows use
-     * the same registration name.
+     * All discovered workflows are created and validated
+     * before a single atomic registration operation.
      */
     override fun afterSingletonsInstantiated() {
-        val discovered = linkedMapOf<String, KiwiFlowWorkflow<*, *>>()
+        val discovered =
+            linkedMapOf<KiwiWorkflowKey<*, *>, KiwiWorkflow<*, *>>()
 
         applicationContext.beanDefinitionNames.forEach { beanName ->
-            discoverBean(beanName)?.forEach { (name, workflow) ->
-                check(discovered.putIfAbsent(name, workflow) == null) {
-                    "Workflow '$name' is declared by multiple Spring beans."
+            discoverBean(beanName)?.forEach { (key, workflow) ->
+                check(discovered.putIfAbsent(key, workflow) == null) {
+                    "Workflow '${key.name}' is declared by multiple Spring beans."
                 }
             }
         }
@@ -56,39 +43,50 @@ class KiwiFlowBeanRegistrar(
         registry.registerAll(discovered)
     }
 
+    /**
+     * Discovers workflows declared by a Spring bean.
+     */
     private fun discoverBean(
         beanName: String
-    ): Map<String, KiwiFlowWorkflow<*, *>>? {
+    ): Map<KiwiWorkflowKey<*, *>, KiwiWorkflow<*, *>>? {
+
         val beanType = applicationContext.getType(beanName)
             ?: return null
 
-        val candidateAnnotations = findWorkflowAnnotations(beanType)
+        val candidateAnnotations =
+            findWorkflowAnnotations(beanType)
 
         if (candidateAnnotations.isEmpty()) {
             return null
         }
 
         val bean = applicationContext.getBean(beanName)
+
         val targetClass = AopUtils.getTargetClass(bean)
 
         val annotations = findWorkflowAnnotations(targetClass)
             .ifEmpty { candidateAnnotations }
             .sortedBy { it.name }
 
-
-        val result = linkedMapOf<String, KiwiFlowWorkflow<*, *>>()
+        val result =
+            linkedMapOf<KiwiWorkflowKey<*, *>, KiwiWorkflow<*, *>>()
 
         annotations.forEach { annotation ->
+
             val name = annotation.name
                 .takeIf(String::isNotBlank)
-                ?: targetClass.simpleName.takeIf(String::isNotBlank)
+                ?: targetClass.simpleName
+                    .takeIf(String::isNotBlank)
                 ?: beanName
 
-            check(name !in result) {
-                "Workflow '$name' is declared multiple times in bean '$beanName'."
+            val key = KiwiWorkflowKey<Any?, Any?>(name)
+
+            check(key !in result) {
+                "Workflow '$name' is declared multiple times " +
+                        "in bean '$beanName'."
             }
 
-            result[name] = factory.create(
+            result[key] = factory.create(
                 instance = bean,
                 annotation = annotation
             )
@@ -97,6 +95,11 @@ class KiwiFlowBeanRegistrar(
         return result
     }
 
+    /**
+     * Finds merged workflow annotations.
+     *
+     * Supports composed annotations and meta-annotations.
+     */
     private fun findWorkflowAnnotations(
         targetClass: Class<*>
     ): Set<Workflow> =

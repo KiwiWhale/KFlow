@@ -1,8 +1,8 @@
 package io.github.kiwiwhale.kiwiflow.spring.autoconfigure
 
+import io.github.kiwiwhale.kiwiflow.core.workflow.KiwiWorkflowRegistry
 import io.github.kiwiwhale.kiwiflow.spring.factory.SpringWorkflowFactory
 import io.github.kiwiwhale.kiwiflow.spring.registrar.KiwiFlowBeanRegistrar
-import io.github.kiwiwhale.kiwiflow.spring.registry.WorkflowRegistry
 import kotlin.test.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertSame
@@ -20,7 +20,7 @@ class KiwiFlowAutoConfigurationTest {
     @Test
     fun `KFlow Bean들이 자동 구성된다`() {
         contextRunner.run { context ->
-            assertNotNull(context.getBean<WorkflowRegistry>())
+            assertNotNull(context.getBean<KiwiWorkflowRegistry>())
             assertNotNull(context.getBean<SpringWorkflowFactory>())
             assertNotNull(context.getBean<KiwiFlowBeanRegistrar>())
         }
@@ -28,20 +28,20 @@ class KiwiFlowAutoConfigurationTest {
 
     @Test
     fun `사용자 정의 WorkflowRegistry를 유지한다`() {
-        val customRegistry = WorkflowRegistry()
+        val customRegistry = KiwiWorkflowRegistry()
 
         contextRunner
             .withBean(
                 "customWorkflowRegistry",
-                WorkflowRegistry::class.java,
+                KiwiWorkflowRegistry::class.java,
                 { customRegistry }
             )
             .run { context ->
-                assertNotNull(context.getBean<WorkflowRegistry>())
+                assertNotNull(context.getBean<KiwiWorkflowRegistry>())
 
                 assertSame(
                     customRegistry,
-                    context.getBean<WorkflowRegistry>()
+                    context.getBean<KiwiWorkflowRegistry>()
                 )
             }
     }

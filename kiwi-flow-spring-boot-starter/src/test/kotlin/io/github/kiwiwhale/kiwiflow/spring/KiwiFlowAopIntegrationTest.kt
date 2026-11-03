@@ -2,10 +2,10 @@ package io.github.kiwiwhale.kiwiflow.spring
 
 import io.github.kiwiwhale.kiwiflow.annotation.Step
 import io.github.kiwiwhale.kiwiflow.annotation.Workflow
-import io.github.kiwiwhale.kiwiflow.core.workflow.KiwiFlowWorkflow
+import io.github.kiwiwhale.kiwiflow.core.workflow.KiwiWorkflow
+import io.github.kiwiwhale.kiwiflow.core.workflow.KiwiWorkflowRegistry
 import io.github.kiwiwhale.kiwiflow.spring.factory.SpringWorkflowFactory
 import io.github.kiwiwhale.kiwiflow.spring.registrar.KiwiFlowBeanRegistrar
-import io.github.kiwiwhale.kiwiflow.spring.registry.WorkflowRegistry
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -46,7 +46,7 @@ class KiwiFlowAopIntegrationTest {
 
         val context = AnnotationConfigApplicationContext()
 
-        val registry = WorkflowRegistry()
+        val registry = KiwiWorkflowRegistry()
         val factory = SpringWorkflowFactory()
 
         context.registerBean("aopWorkflow") {
@@ -75,12 +75,12 @@ class KiwiFlowAopIntegrationTest {
             assertTrue(registry.contains("AopWorkflow"))
 
             @Suppress("UNCHECKED_CAST")
-            val workflow = registry.get("AopWorkflow")
-                    as KiwiFlowWorkflow<String, String>
+            val kiwiWorkflow = registry.get("AopWorkflow")
+                    as KiwiWorkflow<String, String>
 
             assertEquals(
                 "Hello KFlow",
-                workflow.execute("KFlow")
+                kiwiWorkflow.execute("KFlow")
             )
 
             assertEquals(1, invocationCount.get())
