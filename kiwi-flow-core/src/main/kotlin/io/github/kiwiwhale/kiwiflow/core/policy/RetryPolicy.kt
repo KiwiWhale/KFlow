@@ -41,24 +41,18 @@ data class RetryPolicy(
         }
 
         var baseDelay = initialDelay
+        var remaining = attempt - 1
 
-        if (multiplier > 1.0) {
-            var remaining = attempt - 1
+        while (remaining > 0 && baseDelay < maxDelay) {
+            baseDelay = (baseDelay * multiplier)
+                .coerceAtMost(maxDelay)
 
-            while (remaining > 0 && baseDelay < maxDelay) {
-                baseDelay = (baseDelay * multiplier)
-                    .coerceAtMost(maxDelay)
-
-                remaining--
-            }
+            remaining--
         }
 
         val jitteredDelay = when (jitter) {
             RetryJitter.NONE -> baseDelay
-
-            RetryJitter.FULL ->
-                baseDelay * Random.nextDouble()
-
+            RetryJitter.FULL -> baseDelay * Random.nextDouble()
             RetryJitter.EQUAL ->
                 baseDelay * (0.5 + Random.nextDouble() * 0.5)
         }

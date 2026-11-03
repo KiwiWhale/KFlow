@@ -8,9 +8,8 @@ import io.github.kiwiwhale.kiwiflow.core.execution.ExecutionTracker
 import io.github.kiwiwhale.kiwiflow.core.workflow.KiwiFlowWorkflowScope
 import kotlin.time.TimeSource
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withTimeoutOrNull
 
 internal class Step<I, O>(
     private val name: String,
@@ -96,16 +95,12 @@ internal class Step<I, O>(
         val timeout = policy.timeout
             ?: return action(scope)
 
-        try {
-            return withTimeout(timeout) {
-                action(scope)
-            }
-        } catch (exception: TimeoutCancellationException) {
-            throw StepTimeoutException(
-                stepName = name,
-                timeout = timeout,
-                cause = exception
-            )
-        }
+        val result = withTimeoutOrNull(timeout) {
+            ActionResult(action(scope))
+        } ?: throw StepTimeoutException(name, timeout)
+
+        return result.value
     }
+
+    private data class ActionResult<T>(val value: T)
 }

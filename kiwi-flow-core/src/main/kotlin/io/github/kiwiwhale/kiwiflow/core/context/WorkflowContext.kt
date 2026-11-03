@@ -58,18 +58,11 @@ class WorkflowContext {
     inline fun <reified T : Any> getOrDefault(
         key: String,
         defaultValue: T
-    ): T = get<T>(key) ?: defaultValue
-
-    inline fun <reified T : Any> getOrPut(
-        key: String,
-        noinline defaultValue: () -> T
     ): T {
-        val value = getOrPutValue(key, defaultValue)
+        val value = getValue(key) ?: return defaultValue
 
         return value as? T
-            ?: throw ClassCastException(
-                "Context value '$key' is not of type ${T::class.simpleName}"
-            )
+            ?: throw ClassCastException("Context value '$key' is not of type ${T::class.simpleName}")
     }
 
     inline fun <reified T : Any> update(
