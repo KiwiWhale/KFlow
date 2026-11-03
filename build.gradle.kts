@@ -56,6 +56,7 @@ subprojects {
 
     if (name != "kiwi-flow-example") {
         pluginManager.apply("maven-publish")
+        pluginManager.apply("org.jetbrains.dokka")
 
         extensions.configure<PublishingExtension> {
             publications {
