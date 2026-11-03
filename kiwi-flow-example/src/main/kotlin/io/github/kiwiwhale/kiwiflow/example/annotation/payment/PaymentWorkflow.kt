@@ -1,4 +1,4 @@
-package io.github.kiwiwhale.kiwiflow.example.annotations.payment
+package io.github.kiwiwhale.kiwiflow.example.annotation.payment
 
 import io.github.kiwiwhale.kiwiflow.annotation.Retry
 import io.github.kiwiwhale.kiwiflow.annotation.Step

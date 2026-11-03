@@ -1,4 +1,4 @@
-package io.github.kiwiwhale.kiwiflow.example.annotations.image
+package io.github.kiwiwhale.kiwiflow.example.annotation.image
 
 import io.github.kiwiwhale.kiwiflow.annotation.Step
 import io.github.kiwiwhale.kiwiflow.annotation.Workflow

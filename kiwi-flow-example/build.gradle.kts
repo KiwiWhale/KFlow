@@ -1,15 +1,7 @@
 dependencies {
     implementation(project(":kiwi-flow-core"))
-    implementation(project(":kiwi-flow-annotations"))
+    implementation(project(":kiwi-flow-annotation"))
 
     testImplementation(kotlin("test"))
     testImplementation(libs.kotlinx.coroutines.test)
-}
-
-kotlin {
-    jvmToolchain(25)
-}
-
-tasks.test {
-    useJUnitPlatform()
 }

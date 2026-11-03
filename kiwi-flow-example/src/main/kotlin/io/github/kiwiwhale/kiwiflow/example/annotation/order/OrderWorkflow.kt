@@ -1,4 +1,4 @@
-package io.github.kiwiwhale.kiwiflow.example.annotations.order
+package io.github.kiwiwhale.kiwiflow.example.annotation.order
 
 import io.github.kiwiwhale.kiwiflow.annotation.Step
 import io.github.kiwiwhale.kiwiflow.annotation.Workflow

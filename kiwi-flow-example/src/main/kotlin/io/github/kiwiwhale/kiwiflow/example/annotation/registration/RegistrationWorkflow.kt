@@ -1,4 +1,4 @@
-package io.github.kiwiwhale.kiwiflow.example.annotations.registration
+package io.github.kiwiwhale.kiwiflow.example.annotation.registration
 
 import io.github.kiwiwhale.kiwiflow.annotation.Step
 import io.github.kiwiwhale.kiwiflow.annotation.Workflow
