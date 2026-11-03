@@ -3,7 +3,7 @@ package io.github.kiwiwhale.kiwiflow.annotation.factory
 import io.github.kiwiwhale.kiwiflow.annotation.Step
 import io.github.kiwiwhale.kiwiflow.annotation.Workflow
 import io.github.kiwiwhale.kiwiflow.annotation.exception.InvalidWorkflowException
-import io.github.kiwiwhale.kiwiflow.core.workflow.KiwiFlowWorkflow
+import io.github.kiwiwhale.kiwiflow.core.workflow.KiwiWorkflow
 import kotlin.test.Test
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
@@ -41,20 +41,20 @@ class AnnotatedWorkflowFactoryTest {
 
     @Test
     fun `어노테이션이 적용된 인스턴스로 워크플로우를 생성한다`() {
-        val workflow: KiwiFlowWorkflow<String, String> =
+        val kiwiWorkflow: KiwiWorkflow<String, String> =
             AnnotatedWorkflowFactory.fromInstance(instance)
 
-        assertNotNull(workflow)
+        assertNotNull(kiwiWorkflow)
     }
 
     @Test
     fun `사용자 지정 워크플로우 이름으로 생성할 수 있다`() {
-        val workflow: KiwiFlowWorkflow<String, String> =
+        val kiwiWorkflow: KiwiWorkflow<String, String> =
             AnnotatedWorkflowFactory.fromInstance(
                 CustomWorkflow()
             )
 
-        assertNotNull(workflow)
+        assertNotNull(kiwiWorkflow)
     }
 
     @Test
@@ -77,10 +77,10 @@ class AnnotatedWorkflowFactoryTest {
 
     @Test
     fun `동일한 인스턴스로 여러 워크플로우를 생성할 수 있다`() {
-        val first: KiwiFlowWorkflow<String, String> =
+        val first: KiwiWorkflow<String, String> =
             AnnotatedWorkflowFactory.fromInstance(instance)
 
-        val second: KiwiFlowWorkflow<String, String> =
+        val second: KiwiWorkflow<String, String> =
             AnnotatedWorkflowFactory.fromInstance(instance)
 
         assertNotNull(first)

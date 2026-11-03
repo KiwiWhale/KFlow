@@ -2,62 +2,56 @@ package io.github.kiwiwhale.kiwiflow.annotation.metadata
 
 import io.github.kiwiwhale.kiwiflow.annotation.Workflow
 import io.github.kiwiwhale.kiwiflow.annotation.reflection.WorkflowInspector
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
 
 /**
- * Caches workflow metadata by target class.
+ * Caches resolved workflow metadata by Kotlin class.
  *
- * Uses [ClassValue] to associate metadata with a class without
- * maintaining a global strong-reference map of class loaders.
+ * Metadata discovery is performed only once per class for the
+ * default annotation-discovery path.
  *
- * Workflows using an explicitly supplied [Workflow] annotation
- * are inspected independently and do not use the class-based cache.
+ * Explicit workflow annotations are inspected independently because
+ * they may represent different workflow configurations for the
+ * same target class.
  *
- * @property inspector Inspector responsible for metadata discovery.
+ * @property inspector Inspector responsible for resolving workflow metadata.
+ *
+ * @see WorkflowInspector
+ * @see WorkflowMetadata
  */
 internal class WorkflowMetadataCache(
     private val inspector: WorkflowInspector
 ) {
 
-    private val cache = object : ClassValue<WorkflowMetadata>() {
-        override fun computeValue(type: Class<*>): WorkflowMetadata {
-            return inspector.inspect(type.kotlin)
-        }
-    }
+    private val cache =
+        ConcurrentHashMap<KClass<*>, WorkflowMetadata>()
 
     /**
-     * Returns cached metadata for the specified Kotlin class.
+     * Returns cached metadata for the specified workflow class.
      *
-     * @param targetClass Class to inspect.
+     * If metadata has not been resolved yet, it is inspected
+     * and stored in the cache.
+     *
+     * @param targetClass Kotlin class to inspect.
      * @return Resolved workflow metadata.
+     * @throws InvalidWorkflowException If workflow metadata is invalid.
      */
-    fun get(targetClass: KClass<*>): WorkflowMetadata {
-        return get(targetClass.java)
-    }
+    fun get(targetClass: KClass<*>): WorkflowMetadata =
+        cache.computeIfAbsent(targetClass, inspector::inspect)
 
     /**
-     * Returns cached metadata for the specified Java class.
+     * Resolves workflow metadata using an explicit annotation.
      *
-     * @param targetClass Class to inspect.
+     * Explicit annotations bypass the default metadata cache
+     * because their configuration may differ from the annotation
+     * declared on the target class.
+     *
+     * @param targetClass Kotlin class to inspect.
+     * @param annotation Explicit workflow annotation.
      * @return Resolved workflow metadata.
+     * @throws InvalidWorkflowException If workflow metadata is invalid.
      */
-    fun get(targetClass: Class<*>): WorkflowMetadata {
-        return cache.get(targetClass)
-    }
-
-    /**
-     * Inspects a workflow using an explicitly supplied annotation.
-     *
-     * This operation bypasses the class-based metadata cache.
-     *
-     * @param targetClass Class containing workflow step methods.
-     * @param annotation Workflow configuration to use.
-     * @return Resolved workflow metadata.
-     */
-    fun get(targetClass: Class<*>, annotation: Workflow): WorkflowMetadata {
-        return inspector.inspect(
-            kClass = targetClass.kotlin,
-            annotation = annotation
-        )
-    }
+    fun get(targetClass: KClass<*>, annotation: Workflow): WorkflowMetadata =
+        inspector.inspect(targetClass, annotation)
 }

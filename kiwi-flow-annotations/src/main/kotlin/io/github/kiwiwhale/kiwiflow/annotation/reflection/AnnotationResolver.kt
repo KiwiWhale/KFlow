@@ -1,6 +1,5 @@
 package io.github.kiwiwhale.kiwiflow.annotation.reflection
 
-import io.github.kiwiwhale.kiwiflow.annotation.KiwiFlowAnnotation
 import kotlin.reflect.KClass
 
 /**
@@ -64,9 +63,9 @@ internal object AnnotationResolver {
             return
         }
 
-        if (annotationType.getAnnotation(KiwiFlowAnnotation::class.java) == null) {
-            return
-        }
+//        if (annotationType.getAnnotation(KiwiFlowAnnotation::class.java) == null) {
+//            return
+//        }
 
         annotationType.declaredAnnotations
             .asSequence()
