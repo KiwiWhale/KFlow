@@ -19,4 +19,15 @@ class StepException(
 ) : KiwiFlowException(
     message = "Step '$stepName' failed at attempt $attempt: $message",
     cause = cause
-)
+) {
+
+    init {
+        require(stepName.isNotBlank()) {
+            "Step name cannot be blank"
+        }
+
+        require(attempt >= 1) {
+            "Attempt must be at least 1"
+        }
+    }
+}
