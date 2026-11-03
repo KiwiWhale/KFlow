@@ -9,12 +9,12 @@ import kotlin.test.assertFailsWith
 class KiwiFlowPluginDuplicateTest {
 
     private val firstWorkflow =
-        KiwiFlow.workflow<String, String>("First") {
+        KiwiFlow.workflow<String, String>("Duplicate") {
             "First $input"
         }
 
     private val secondWorkflow =
-        KiwiFlow.workflow<String, String>("Second") {
+        KiwiFlow.workflow<String, String>("Duplicate") {
             "Second $input"
         }
 
@@ -24,8 +24,8 @@ class KiwiFlowPluginDuplicateTest {
             testApplication {
                 application {
                     install(KiwiFlowPlugin) {
-                        workflow("Duplicate", firstWorkflow)
-                        workflow("Duplicate", secondWorkflow)
+                        workflow(firstWorkflow)
+                        workflow(secondWorkflow)
                     }
                 }
             }

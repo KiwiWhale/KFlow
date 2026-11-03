@@ -1,13 +1,11 @@
 package io.github.kiwiwhale.kiwiflow.ktor
 
 import io.github.kiwiwhale.kiwiflow.core.KiwiFlow
-import io.github.kiwiwhale.kiwiflow.ktor.registry.WorkflowRegistry
 import io.ktor.server.application.install
 import io.ktor.server.testing.testApplication
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
-import kotlin.test.assertNotSame
 import kotlin.test.assertTrue
 
 class KiwiFlowPluginIsolationTest {
@@ -24,18 +22,14 @@ class KiwiFlowPluginIsolationTest {
 
     @Test
     fun `각 Application은 독립적인 Registry를 가진다`() {
-        lateinit var firstRegistry: WorkflowRegistry
-        lateinit var secondRegistry: WorkflowRegistry
-
         testApplication {
             application {
                 install(KiwiFlowPlugin) {
                     workflow("First", firstWorkflow)
                 }
 
-                firstRegistry = KiwiFlow.registry
-
                 assertTrue(KiwiFlow.contains("First"))
+                assertFalse(KiwiFlow.contains("Second"))
             }
         }
 
@@ -45,14 +39,10 @@ class KiwiFlowPluginIsolationTest {
                     workflow("Second", secondWorkflow)
                 }
 
-                secondRegistry = KiwiFlow.registry
-
                 assertTrue(KiwiFlow.contains("Second"))
                 assertFalse(KiwiFlow.contains("First"))
             }
         }
-
-        assertNotSame(firstRegistry, secondRegistry)
     }
 
     @Test

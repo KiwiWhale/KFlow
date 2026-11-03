@@ -39,7 +39,7 @@ class KiwiFlowPluginRegistrationTest {
     fun `여러 Workflow를 DSL로 등록한다`() = testApplication {
         application {
             install(KiwiFlowPlugin) {
-                workflows(
+                workflowsByName(
                     mapOf(
                         "Hello" to helloWorkflow,
                         "Payment" to paymentWorkflow
