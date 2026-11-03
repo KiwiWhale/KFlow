@@ -7,8 +7,30 @@ import kotlin.reflect.KParameter
 import kotlin.reflect.KVisibility
 import kotlin.time.Duration.Companion.milliseconds
 
+/**
+ * Validates reflected step functions and their annotation configuration.
+ *
+ * Ensures that step declarations satisfy the restrictions required
+ * by the annotation-based workflow execution model.
+ */
 internal object ReflectionValidator {
 
+    /**
+     * Validates a step function and its [Step] configuration.
+     *
+     * Supported functions must:
+     * - Have public visibility.
+     * - Be member functions.
+     * - Accept zero or one input parameter.
+     * - Not declare default parameters.
+     * - Not declare vararg parameters.
+     * - Have valid timeout and retry configurations.
+     *
+     * @param function Reflected function to validate.
+     * @param annotation Step configuration.
+     * @throws InvalidStepException If the function declaration
+     * or its configuration is invalid.
+     */
     fun validateStep(
         function: KFunction<*>,
         annotation: Step

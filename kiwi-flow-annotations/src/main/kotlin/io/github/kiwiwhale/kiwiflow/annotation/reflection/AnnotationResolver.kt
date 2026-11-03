@@ -3,8 +3,26 @@ package io.github.kiwiwhale.kiwiflow.annotation.reflection
 import io.github.kiwiwhale.kiwiflow.annotation.KiwiFlowAnnotation
 import kotlin.reflect.KClass
 
+/**
+ * Resolves annotations declared directly or indirectly through
+ * meta-annotation composition.
+ *
+ * This resolver is used to support custom annotations built on
+ * top of KiwiFlow annotations.
+ */
 internal object AnnotationResolver {
 
+    /**
+     * Finds an annotation of the specified type.
+     *
+     * Searches direct annotations and their eligible meta-annotations.
+     *
+     * @param annotations Annotations to inspect.
+     * @param target Annotation type to resolve.
+     * @return The resolved annotation, or null if none is found.
+     * @throws IllegalArgumentException If multiple matching annotations
+     * are discovered.
+     */
     fun <T : Annotation> find(
         annotations: Array<out Annotation>,
         target: KClass<T>
@@ -63,9 +81,7 @@ internal object AnnotationResolver {
             }
     }
 
-    private fun isInfrastructureAnnotation(
-        annotation: Annotation
-    ): Boolean {
+    private fun isInfrastructureAnnotation(annotation: Annotation): Boolean {
         val packageName = annotation.annotationClass.java.packageName
 
         return packageName == "java.lang.annotation" ||

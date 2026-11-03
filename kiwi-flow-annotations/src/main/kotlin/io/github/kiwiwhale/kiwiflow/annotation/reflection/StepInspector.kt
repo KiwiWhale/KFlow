@@ -8,8 +8,24 @@ import io.github.kiwiwhale.kiwiflow.annotation.policy.AnnotationPolicyMapper
 import kotlin.reflect.KFunction
 import kotlin.time.Duration.Companion.milliseconds
 
+/**
+ * Discovers and inspects workflow step functions.
+ *
+ * Resolves direct and composed [Step] annotations, validates
+ * their declarations, and converts them into [StepMetadata].
+ */
 internal class StepInspector {
 
+    /**
+     * Inspects a function for a [Step] annotation.
+     *
+     * Returns null when the function is not a workflow step.
+     *
+     * @param function Function to inspect.
+     * @return Resolved step metadata, or null if no step annotation
+     * is present.
+     * @throws InvalidStepException If the step declaration is invalid.
+     */
     fun inspect(function: KFunction<*>): StepMetadata? {
         val annotation = try {
             AnnotationResolver.find(
