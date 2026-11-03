@@ -1,5 +1,6 @@
 package io.github.kiwiwhale.kiwiflow.annotation.reflection
 
+import io.github.kiwiwhale.kiwiflow.annotation.KiwiFlowAnnotation
 import kotlin.reflect.KClass
 
 internal object AnnotationResolver {
@@ -42,6 +43,10 @@ internal object AnnotationResolver {
         }
 
         if (!visited.add(annotationType)) {
+            return
+        }
+
+        if (annotationType.getAnnotation(KiwiFlowAnnotation::class.java) == null) {
             return
         }
 

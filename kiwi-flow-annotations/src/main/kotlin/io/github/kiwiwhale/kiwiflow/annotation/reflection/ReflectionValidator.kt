@@ -5,6 +5,7 @@ import io.github.kiwiwhale.kiwiflow.annotation.exception.InvalidStepException
 import kotlin.reflect.KFunction
 import kotlin.reflect.KParameter
 import kotlin.reflect.KVisibility
+import kotlin.time.Duration.Companion.milliseconds
 
 internal object ReflectionValidator {
 
@@ -51,6 +52,13 @@ internal object ReflectionValidator {
         }
 
         val retry = annotation.retry
+
+        val initialDelay = retry.initialDelayMillis.milliseconds
+        val maxDelay = retry.maxDelayMillis.milliseconds
+
+        if (!initialDelay.isFinite() || !maxDelay.isFinite()) {
+            invalid("Retry delay exceeds the supported duration range.")
+        }
 
         if (retry.maxAttempts < 1) {
             invalid("maxAttempts must be at least 1.")

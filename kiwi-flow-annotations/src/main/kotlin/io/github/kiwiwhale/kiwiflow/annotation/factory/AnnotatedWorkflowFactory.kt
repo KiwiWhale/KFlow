@@ -43,7 +43,7 @@ object AnnotatedWorkflowFactory {
     ): KiwiFlowWorkflow<I, O> {
         val metadata = metadataCache.get(targetClass)
 
-        return create(instance, metadata)
+        return create(instance, targetClass, metadata)
     }
 
     fun <I, O> fromInstance(
@@ -56,22 +56,26 @@ object AnnotatedWorkflowFactory {
             annotation = annotation
         )
 
-        return create(instance, metadata)
+        return create(instance, targetClass, metadata)
     }
 
     private fun <I, O> create(
         instance: Any,
+        targetClass: Class<*>,
         metadata: WorkflowMetadata
     ): KiwiFlowWorkflow<I, O> {
-        return KiwiFlow.workflow(metadata.name) {
 
+        require(targetClass.isInstance(instance)) {
+            "Instance of ${instance.javaClass.name} is not compatible with ${targetClass.name}."
+        }
+
+        return KiwiFlow.workflow(metadata.name) {
             var currentData: Any? = input
 
             for (stepMetadata in metadata.steps) {
                 val stepInput = currentData
 
                 currentData = step(stepMetadata.name) {
-
                     stepMetadata.timeout?.let(::timeout)
                     stepMetadata.retryPolicy?.let(::retry)
 

@@ -11,10 +11,18 @@ import kotlin.time.Duration.Companion.milliseconds
 internal class StepInspector {
 
     fun inspect(function: KFunction<*>): StepMetadata? {
-        val annotation = AnnotationResolver.find(
-            annotations = function.annotations.toTypedArray(),
-            target = Step::class
-        ) ?: return null
+        val annotation = try {
+            AnnotationResolver.find(
+                annotations = function.annotations.toTypedArray(),
+                target = Step::class
+            )
+        } catch (exception: IllegalArgumentException) {
+            throw InvalidStepException(
+                stepName = function.name,
+                message = "Multiple @Step annotations were found.",
+                cause = exception
+            )
+        } ?: return null
 
         val name = annotation.name.ifBlank {
             function.name
