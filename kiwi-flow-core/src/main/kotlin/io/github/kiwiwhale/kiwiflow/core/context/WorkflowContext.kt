@@ -32,7 +32,7 @@ import java.util.concurrent.ConcurrentHashMap
  * }
  * ```
  *
- * @see KiwiFlowWorkflowScope
+ * @see KiwiWorkflowScope
  */
 class WorkflowContext {
 
