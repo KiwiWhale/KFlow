@@ -12,12 +12,27 @@ import java.util.concurrent.ConcurrentHashMap
  * Values are stored using non-blank string keys and non-null objects.
  * The underlying storage is backed by [ConcurrentHashMap].
  *
- * Individual operations and supported compound operations
- * such as [getOrPut] and [update] are atomic per key.
+ * Operations on individual keys are thread-safe. Compound operations
+ * should use [getOrPut] or [update] when atomicity is required.
  *
  * Snapshots returned by [snapshot] are immutable shallow copies.
  *
- * @see KiwiWorkflowScope
+ * Example:
+ *
+ * ```
+ * val context = WorkflowContext()
+ *
+ * context["userId"] = "user-123"
+ * context["attempts"] = 1
+ *
+ * val userId = context.require<String>("userId")
+ *
+ * context.update<Int>("attempts") { current ->
+ *     (current ?: 0) + 1
+ * }
+ * ```
+ *
+ * @see KiwiFlowWorkflowScope
  */
 class WorkflowContext {
 
