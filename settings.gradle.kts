@@ -15,7 +15,7 @@ plugins {
 rootProject.name = "kiwi-flow"
 
 include("kiwi-flow-core")
-include("kiwi-flow-annotations")
+include("kiwi-flow-annotation")
 include("kiwi-flow-example")
 include("kiwi-flow-spring-boot-starter")
 include("kiwi-flow-ktor")

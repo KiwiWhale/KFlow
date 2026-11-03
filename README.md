@@ -48,7 +48,7 @@ dependencies {
     implementation("com.github.KiwiWhale.kiwi-flow:kiwi-flow-core:VERSION")
 
     // Annotation-based API
-    implementation("com.github.KiwiWhale.kiwi-flow:kiwi-flow-annotations:VERSION")
+    implementation("com.github.KiwiWhale.kiwi-flow:kiwi-flow-annotation:VERSION")
 }
 ```
 
@@ -101,7 +101,7 @@ Both approaches provide different ways to define workflows while using the same 
 | Module                          | Description                           |
 |---------------------------------|---------------------------------------|
 | `kiwi-flow-core`                | Core workflow implementation and DSL  |
-| `kiwi-flow-annotations`         | Annotation-based workflow definitions |
+| `kiwi-flow-annotation`          | Annotation-based workflow definitions |
 | `kiwi-flow-ktor`                | Ktor integration                      |
 | `kiwi-flow-spring-boot-starter` | Spring Boot integration               |
 | `kiwi-flow-example`             | Usage examples                        |
