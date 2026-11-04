@@ -7,6 +7,8 @@ ktor = "3.6.1"
 
 dokka = "2.2.0"
 
+kiwi-registry = "1.0.1"
+
 [libraries]
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx" }
@@ -17,6 +19,8 @@ spring-boot-starter-test = { module = "org.springframework.boot:spring-boot-star
 ktor-bom = { module = "io.ktor:ktor-bom", version.ref = "ktor" }
 ktor-server-core = { module = "io.ktor:ktor-server-core" }
 ktor-server-test-host = { module = "io.ktor:ktor-server-test-host" }
+
+kiwi-registry = { module = "io.github.kiwiwhale:kiwi-registry", version.ref = "kiwi-registry" }
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }

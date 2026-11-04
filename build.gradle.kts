@@ -46,6 +46,12 @@ subprojects {
         jvmToolchain(25)
     }
 
+    repositories {
+        mavenCentral()
+        maven("https://repo.mrjimin.xyz/releases")
+        maven("https://repo.mrjimin.xyz/snapshots")
+    }
+
     dependencies {
         "testImplementation"(kotlin("test"))
     }

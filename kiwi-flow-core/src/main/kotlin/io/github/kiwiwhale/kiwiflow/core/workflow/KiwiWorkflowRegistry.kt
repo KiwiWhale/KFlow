@@ -1,50 +1,43 @@
 package io.github.kiwiwhale.kiwiflow.core.workflow
 
-import java.util.Collections
-import java.util.concurrent.atomic.AtomicReference
+import io.github.kiwiwhale.kiwiregistry.KiwiRegistry
+import io.github.kiwiwhale.kiwiregistry.RegistryId
 
 /**
- * Thread-safe registry for managing KiwiWorkflow instances.
+ * Registry for managing KiwiWorkflow instances.
  *
- * Workflows are identified exclusively by KiwiWorkflowKey.
+ * Supports typed keys and RegistryId-based access.
  *
- * String-based registration and lookup are also supported.
- *
- * Registration uses copy-on-write semantics.
- * Multiple registrations are atomic.
+ * @see KiwiWorkflow
+ * @see KiwiWorkflowKey
  */
 class KiwiWorkflowRegistry {
 
-    private val workflows =
-        AtomicReference<Map<KiwiWorkflowKey<*, *>, KiwiWorkflow<*, *>>>(
-            emptyMap()
-        )
+    private val registry = KiwiRegistry(::createKey)
 
     val size: Int
-        get() = workflows.get().size
+        get() = registry.size
 
     fun register(workflow: KiwiWorkflow<*, *>) {
-        registerEntries(mapOf(workflow.key to workflow))
+        registry.register(workflow.key, workflow)
     }
 
     fun register(
         key: KiwiWorkflowKey<*, *>,
         workflow: KiwiWorkflow<*, *>
     ) {
-        require(key == workflow.key) {
-            "Workflow key '${key.name}' does not match " +
-                    "workflow key '${workflow.key.name}'."
+        require(key.id == workflow.key.id) {
+            "Workflow key '${key.id}' does not match " +
+                    "workflow key '${workflow.key.id}'."
         }
 
-        register(workflow)
+        registry.register(key, workflow)
     }
 
     fun register(
         name: String,
         workflow: KiwiWorkflow<*, *>
     ) {
-        validateName(name)
-
         require(name == workflow.key.name) {
             "Workflow name '$name' does not match " +
                     "workflow key '${workflow.key.name}'."
@@ -56,139 +49,97 @@ class KiwiWorkflowRegistry {
     fun registerAll(
         additions: Collection<KiwiWorkflow<*, *>>
     ) {
-        registerEntries(
+        registry.registerAll(
             additions.associateBy { it.key }
         )
     }
 
-    fun registerAll(
-        additions: Map<KiwiWorkflowKey<*, *>, KiwiWorkflow<*, *>>
-    ) {
-        additions.forEach { (key, workflow) ->
-            require(key == workflow.key) {
-                "Workflow key '${key.name}' does not match " +
-                        "workflow key '${workflow.key.name}'."
-            }
-        }
+    operator fun get(
+        key: KiwiWorkflowKey<*, *>
+    ): KiwiWorkflow<*, *> =
+        registry[key]
 
-        registerEntries(LinkedHashMap(additions))
-    }
+    operator fun get(
+        id: RegistryId
+    ): KiwiWorkflow<*, *> =
+        registry[id]
 
-    @JvmName("registerAllByName")
-    fun registerAll(
-        additions: Map<String, KiwiWorkflow<*, *>>
-    ) {
-        val entries =
-            LinkedHashMap<KiwiWorkflowKey<*, *>, KiwiWorkflow<*, *>>()
+    operator fun get(
+        name: String
+    ): KiwiWorkflow<*, *> =
+        registry[id(name)]
 
-        additions.forEach { (name, workflow) ->
-            validateName(name)
+    fun getOrNull(
+        key: KiwiWorkflowKey<*, *>
+    ): KiwiWorkflow<*, *>? =
+        registry.getOrNull(key)
 
-            require(name == workflow.key.name) {
-                "Workflow name '$name' does not match " +
-                        "workflow key '${workflow.key.name}'."
-            }
+    fun getOrNull(
+        id: RegistryId
+    ): KiwiWorkflow<*, *>? =
+        registry.getOrNull(id)
 
-            check(entries.putIfAbsent(workflow.key, workflow) == null) {
-                "Workflow '${workflow.key.name}' is registered multiple times."
-            }
-        }
+    fun getOrNull(
+        name: String
+    ): KiwiWorkflow<*, *>? =
+        registry.getOrNull(id(name))
 
-        registerEntries(entries)
-    }
+    operator fun contains(
+        key: KiwiWorkflowKey<*, *>
+    ): Boolean =
+        registry.contains(key)
 
-    private fun registerEntries(
-        additions: Map<KiwiWorkflowKey<*, *>, KiwiWorkflow<*, *>>
-    ) {
-        if (additions.isEmpty()) return
+    operator fun contains(
+        id: RegistryId
+    ): Boolean =
+        registry.contains(id)
 
-        while (true) {
-            val current = workflows.get()
+    operator fun contains(
+        name: String
+    ): Boolean =
+        registry.contains(id(name))
 
-            val duplicates = additions.keys
-                .filter { it in current }
-                .map { it.name }
-                .sorted()
+    fun unregister(
+        key: KiwiWorkflowKey<*, *>
+    ): Boolean =
+        registry.unregister(key)
 
-            check(duplicates.isEmpty()) {
-                "Workflows already registered: ${duplicates.joinToString()}."
-            }
+    fun unregister(
+        id: RegistryId
+    ): Boolean =
+        registry.unregister(id)
 
-            val updated = LinkedHashMap(current)
-            updated.putAll(additions)
-
-            val immutable = Collections.unmodifiableMap(updated)
-
-            if (workflows.compareAndSet(current, immutable)) {
-                return
-            }
-        }
-    }
-
-    @Suppress("UNCHECKED_CAST")
-    fun <I, O> get(
-        key: KiwiWorkflowKey<I, O>
-    ): KiwiWorkflow<I, O> =
-        getOrNull(key)
-            ?: throw NoSuchElementException(
-                "Workflow '${key.name}' is not registered."
-            )
-
-    fun get(name: String): KiwiWorkflow<*, *> =
-        getOrNull(name)
-            ?: throw NoSuchElementException(
-                "Workflow '$name' is not registered."
-            )
-
-    @Suppress("UNCHECKED_CAST")
-    fun <I, O> getOrNull(
-        key: KiwiWorkflowKey<I, O>
-    ): KiwiWorkflow<I, O>? =
-        workflows.get()[key] as? KiwiWorkflow<I, O>
-
-    fun getOrNull(name: String): KiwiWorkflow<*, *>? {
-        validateName(name)
-
-        return workflows.get()[
-            KiwiWorkflowKey<Any?, Any?>(name)
-        ]
-    }
-
-    fun contains(key: KiwiWorkflowKey<*, *>): Boolean =
-        workflows.get().containsKey(key)
-
-    fun contains(name: String): Boolean {
-        validateName(name)
-
-        return workflows.get().containsKey(
-            KiwiWorkflowKey<Any?, Any?>(name)
-        )
-    }
+    fun unregister(
+        name: String
+    ): Boolean =
+        registry.unregister(id(name))
 
     fun keys(): Set<KiwiWorkflowKey<*, *>> =
-        Collections.unmodifiableSet(
-            LinkedHashSet(workflows.get().keys)
-        )
+        registry.keys()
+
+    fun ids(): Set<RegistryId> =
+        registry.ids()
 
     fun names(): Set<String> =
-        Collections.unmodifiableSet(
-            workflows.get().keys.mapTo(LinkedHashSet()) { it.name }
-        )
+        ids().mapTo(LinkedHashSet()) { it.key }
 
     fun snapshot(): Map<KiwiWorkflowKey<*, *>, KiwiWorkflow<*, *>> =
-        workflows.get()
+        registry.snapshot()
 
-    fun <I, O> workflow(
-        key: KiwiWorkflowKey<I, O>
-    ): KiwiWorkflow<I, O> = get(key)
-
-    @Suppress("UNCHECKED_CAST")
-    fun <I, O> workflow(name: String): KiwiWorkflow<I, O> =
-        get(name) as KiwiWorkflow<I, O>
-
-    private fun validateName(name: String) {
-        require(name.isNotBlank()) {
-            "Workflow name cannot be blank."
+    private fun createKey(
+        id: RegistryId
+    ): KiwiWorkflowKey<*, *> {
+        require(id.namespace == NAMESPACE) {
+            "Invalid workflow namespace: '${id.namespace}'."
         }
+
+        return KiwiWorkflowKey<Any?, Any?>(id.key)
+    }
+
+    private fun id(name: String): RegistryId =
+        RegistryId(NAMESPACE, name)
+
+    private companion object {
+        const val NAMESPACE = "kiwi-flow"
     }
 }
