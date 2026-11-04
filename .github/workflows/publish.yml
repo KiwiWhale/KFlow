@@ -42,13 +42,13 @@ jobs:
             echo "::error::Invalid version format: $VERSION"
             exit 1
           fi
-
+          
           echo "TAG=$VERSION" >> "$GITHUB_ENV"
 
       - name: Check Existing Tag
         run: |
           git fetch --tags origin
-
+          
           if git show-ref --verify --quiet "refs/tags/$TAG"; then
             echo "::error::Tag $TAG already exists."
             exit 1
@@ -81,66 +81,108 @@ jobs:
               -name '*.jar' \
               | sort
           )
-
+          
           if [ "${#assets[@]}" -eq 0 ]; then
             echo "::error::No release JAR files found."
             exit 1
           fi
-
+          
           printf '%s\n' "${assets[@]}"
           printf '%s\n' "${assets[@]}" > release-assets.txt
+
+      # Explicitly create and push the Git tag.
+      - name: Create and Push Git Tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          
+          git tag -a "$TAG" "$GITHUB_SHA" -m "Release $TAG"
+          
+          git push origin "refs/tags/$TAG"
+          
+          echo "Git tag $TAG pushed successfully."
+
+      # Confirm that the remote repository recognizes the tag.
+      - name: Verify Remote Git Tag
+        run: |
+          echo "Verifying remote tag: $TAG"
+          
+          for i in {1..10}; do
+            if git ls-remote --exit-code --tags origin \
+              "refs/tags/$TAG" >/dev/null 2>&1; then
+              echo "Remote Git tag verified."
+              exit 0
+            fi
+          
+            echo "Waiting for remote tag... ($i/10)"
+            sleep 3
+          done
+          
+          echo "::error::Remote Git tag $TAG could not be verified."
+          exit 1
 
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           mapfile -t assets < release-assets.txt
-
+          
           gh release create "$TAG" \
             "${assets[@]}" \
             --title "$TAG" \
             --generate-notes \
-            --target "$GITHUB_SHA"
+            --verify-tag
 
+      # Request JitPack to build the published tag.
       - name: Trigger JitPack Build
         run: |
           URL="https://jitpack.io/com/github/KiwiWhale/kiwi-flow/$TAG/build.log"
-
+          
           echo "Triggering JitPack build for $TAG..."
+          
+          STATUS=$(curl -sS -L -o /tmp/jitpack.log \
+            -w "%{http_code}" "$URL" || true)
+          
+          echo "JitPack HTTP status: ${STATUS:-unknown}"
+          
+          cat /tmp/jitpack.log || true
+          
+          echo "JitPack build request sent."
 
-          curl -sS "$URL" -o /tmp/jitpack.log || true
-
-          echo "JitPack build requested."
-
+      # Wait for the actual JitPack build result.
       - name: Verify JitPack Build
         run: |
           URL="https://jitpack.io/com/github/KiwiWhale/kiwi-flow/$TAG/build.log"
-
+          
           echo "Waiting for JitPack build: $TAG"
-
+          
           for i in {1..25}; do
             STATUS=$(curl -sS -L -o /tmp/jitpack.log \
               -w "%{http_code}" "$URL" || true)
-
+          
+            echo "JitPack HTTP status: ${STATUS:-unknown} ($i/25)"
+          
             if [ "$STATUS" = "200" ]; then
-
+          
               if grep -qi "BUILD SUCCESSFUL" /tmp/jitpack.log; then
                 echo "JitPack build successful!"
+                cat /tmp/jitpack.log
                 exit 0
               fi
-
+          
               if grep -qiE "BUILD FAILED|BUILD FAILURE" /tmp/jitpack.log; then
                 echo "::error::JitPack build failed."
                 cat /tmp/jitpack.log
                 exit 1
               fi
             fi
-
+          
             echo "JitPack is still building... ($i/25)"
             sleep 30
           done
-
+          
           echo "::error::JitPack build verification timed out."
+          echo "Final JitPack log:"
           cat /tmp/jitpack.log
           exit 1
 
@@ -151,6 +193,7 @@ jobs:
             echo "## KiwiFlow Release"
             echo ""
             echo "- Version: \`$TAG\`"
+            echo "- Git Tag: https://github.com/KiwiWhale/kiwi-flow/tree/$TAG"
             echo "- GitHub Release: https://github.com/KiwiWhale/kiwi-flow/releases/tag/$TAG"
             echo "- JitPack: https://jitpack.io/#KiwiWhale/kiwi-flow/$TAG"
             echo ""
