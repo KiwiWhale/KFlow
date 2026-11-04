@@ -1,12 +1,17 @@
+
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 
 plugins {
     alias(libs.plugins.kotlin.jvm) apply false
     alias(libs.plugins.dokka)
+    id("co.uzzu.dotenv.gradle") version "4.0.0"
 }
 
 group = "io.github.kiwiwhale.kiwiflow"
-version = "1.1.0"
+version = "1.2.0"
+
+val mavenUsername = if (env.isPresent("MAVEN_USERNAME")) env.fetch("MAVEN_USERNAME") else ""
+val mavenPassword = if (env.isPresent("MAVEN_PASSWORD")) env.fetch("MAVEN_PASSWORD") else ""
 
 allprojects {
     group = rootProject.group
@@ -50,6 +55,8 @@ subprojects {
         mavenCentral()
         maven("https://repo.mrjimin.xyz/releases")
         maven("https://repo.mrjimin.xyz/snapshots")
+
+        // maven("https://jitpack.io")
     }
 
     dependencies {
@@ -65,13 +72,35 @@ subprojects {
         pluginManager.apply("org.jetbrains.dokka")
 
         extensions.configure<PublishingExtension> {
-            publications {
-                create<MavenPublication>("mavenJava") {
-                    from(components["java"])
+            repositories {
+                maven {
+                    name = "mrjiminRepository"
 
-                    groupId = project.group.toString()
+                    url = uri(
+                        if (project.version.toString().endsWith("-SNAPSHOT"))
+                            "https://repo.mrjimin.xyz/snapshots"
+                        else
+                            "https://repo.mrjimin.xyz/releases"
+                    )
+
+                    credentials {
+                        username = mavenUsername
+                        password = mavenPassword
+                    }
+
+                    authentication {
+                        create<BasicAuthentication>("basic")
+                    }
+                }
+            }
+
+            publications {
+                create<MavenPublication>("maven") {
+                    groupId = "io.github.kiwiwhale"
                     artifactId = project.name
                     version = project.version.toString()
+
+                    from(components["java"])
                 }
             }
         }

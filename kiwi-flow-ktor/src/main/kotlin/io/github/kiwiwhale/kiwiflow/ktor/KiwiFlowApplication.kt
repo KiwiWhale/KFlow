@@ -19,31 +19,48 @@ class KiwiFlowApplication internal constructor(
     val size: Int
         get() = registry.size
 
+    val isEmpty: Boolean
+        get() = registry.isEmpty
+
     fun names(): Set<String> =
         registry.names()
 
     fun keys(): Set<KiwiWorkflowKey<*, *>> =
         registry.keys()
 
-    fun contains(key: KiwiWorkflowKey<*, *>): Boolean =
-        registry.contains(key)
+    operator fun contains(
+        key: KiwiWorkflowKey<*, *>
+    ): Boolean =
+        key in registry
 
-    fun contains(name: String): Boolean =
-        registry.contains(name)
+    operator fun contains(name: String): Boolean =
+        name in registry
 
-    fun get(key: KiwiWorkflowKey<*, *>): KiwiWorkflow<*, *> =
-        registry.get(key.name)
+    operator fun get(
+        key: KiwiWorkflowKey<*, *>
+    ): KiwiWorkflow<*, *> =
+        registry[key]
 
-    fun get(name: String): KiwiWorkflow<*, *> =
-        registry.get(name)
+    operator fun get(name: String): KiwiWorkflow<*, *> =
+        registry[name]
 
+    fun getOrNull(
+        key: KiwiWorkflowKey<*, *>
+    ): KiwiWorkflow<*, *>? =
+        registry.getOrNull(key)
+
+    fun getOrNull(name: String): KiwiWorkflow<*, *>? =
+        registry.getOrNull(name)
+
+    @Suppress("UNCHECKED_CAST")
     fun <I, O> workflow(
         key: KiwiWorkflowKey<I, O>
     ): KiwiWorkflow<I, O> =
-        registry.workflow(key)
+        registry[key] as KiwiWorkflow<I, O>
 
+    @Suppress("UNCHECKED_CAST")
     fun <I, O> workflow(name: String): KiwiWorkflow<I, O> =
-        registry.workflow(name)
+        registry[name] as KiwiWorkflow<I, O>
 }
 
 val Application.KiwiFlow: KiwiFlowApplication

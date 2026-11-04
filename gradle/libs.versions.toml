@@ -7,7 +7,7 @@ ktor = "3.6.1"
 
 dokka = "2.2.0"
 
-kiwi-registry = "1.0.1"
+kiwi-registry = "1.1.1"
 
 [libraries]
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx" }

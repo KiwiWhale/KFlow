@@ -7,8 +7,8 @@ import io.github.kiwiwhale.kiwiflow.core.workflow.KiwiWorkflowRegistry
 /**
  * Configuration for registering workflows in a Ktor application.
  *
- * Workflow registration, validation, and duplicate detection
- * are delegated to Core.
+ * Workflow storage, validation, and duplicate detection
+ * are delegated to the Core registry.
  */
 class KiwiFlowConfig {
 
@@ -32,26 +32,22 @@ class KiwiFlowConfig {
         registry.register(name, workflow)
     }
 
-    fun workflows(workflows: Collection<KiwiWorkflow<*, *>>) {
+    fun workflows(
+        workflows: Collection<KiwiWorkflow<*, *>>
+    ) {
         registry.registerAll(workflows)
     }
 
-    /**
-     * Registers multiple workflows using typed keys.
-     */
     fun workflowsByKey(
         workflows: Map<KiwiWorkflowKey<*, *>, KiwiWorkflow<*, *>>
     ) {
-        registry.registerAll(workflows)
+        registry.registerAllByKey(workflows)
     }
 
-    /**
-     * Registers multiple workflows using string names.
-     */
     fun workflowsByName(
         workflows: Map<String, KiwiWorkflow<*, *>>
     ) {
-        registry.registerAll(workflows)
+        registry.registerAllByName(workflows)
     }
 
     internal fun registeredWorkflows():

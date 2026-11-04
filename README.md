@@ -32,27 +32,19 @@ kiwi-flow aims to provide a simple and flexible way to define and execute workfl
 
 ## Installation
 
-Add the JitPack repository to your `build.gradle.kts`:
+Add the KiwiWhale Maven repository to your `build.gradle.kts`:
 
 ```kotlin
 repositories {
-    maven("https://jitpack.io")
+    maven("https://repo.mrjimin.xyz/releases")
 }
-```
 
-Add the dependencies for the APIs you want to use:
-
-```kotlin
 dependencies {
-    // DSL
-    implementation("com.github.KiwiWhale.kiwi-flow:kiwi-flow-core:VERSION")
-
-    // Annotation-based API
-    implementation("com.github.KiwiWhale.kiwi-flow:kiwi-flow-annotation:VERSION")
+    implementation("io.github.kiwiwhale:kiwi-flow-{MODULE}:1.2.0")
 }
 ```
 
-Replace `VERSION` with the desired release version.
+Replace `MODULE` with the desired release version.
 
 ## Quick Start
 
