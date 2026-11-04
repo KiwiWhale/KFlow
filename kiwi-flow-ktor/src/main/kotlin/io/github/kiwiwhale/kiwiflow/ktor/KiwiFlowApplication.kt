@@ -52,11 +52,10 @@ class KiwiFlowApplication internal constructor(
     fun getOrNull(name: String): KiwiWorkflow<*, *>? =
         registry.getOrNull(name)
 
-    @Suppress("UNCHECKED_CAST")
     fun <I, O> workflow(
         key: KiwiWorkflowKey<I, O>
     ): KiwiWorkflow<I, O> =
-        registry[key] as KiwiWorkflow<I, O>
+        registry[key]
 
     @Suppress("UNCHECKED_CAST")
     fun <I, O> workflow(name: String): KiwiWorkflow<I, O> =
