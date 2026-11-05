@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "io.github.kiwiwhale.kiwiflow"
-version = "1.2.0"
+version = "1.3.0"
 
 val mavenUsername = if (env.isPresent("MAVEN_USERNAME")) env.fetch("MAVEN_USERNAME") else ""
 val mavenPassword = if (env.isPresent("MAVEN_PASSWORD")) env.fetch("MAVEN_PASSWORD") else ""
