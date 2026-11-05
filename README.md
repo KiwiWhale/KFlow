@@ -1,6 +1,6 @@
 # kiwi-flow
 
-[![JitPack](https://jitpack.io/v/KiwiWhale/kiwi-flow.svg)](https://jitpack.io/#KiwiWhale/kiwi-flow)
+[![Reposilite](https://repo.mrjimin.xyz/api/badge/latest/releases/io/github/kiwiwhale/kiwi-flow-core?color=40c14a&name=Reposilite)](https://repo.mrjimin.xyz/#/releases/io/github/kiwiwhale/kiwi-flow-core)
 [![GitHub License](https://img.shields.io/github/license/KiwiWhale/kiwi-flow?style=flat-square)](LICENSE)
 
 **A lightweight and extensible workflow engine for Kotlin.**
@@ -40,7 +40,7 @@ repositories {
 }
 
 dependencies {
-    implementation("io.github.kiwiwhale:kiwi-flow-{MODULE}:1.2.0")
+    implementation("io.github.kiwiwhale:kiwi-flow-MODULE:1.3.0")
 }
 ```
 
