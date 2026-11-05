@@ -36,7 +36,7 @@ class KiwiFlowInheritedWorkflowTest {
 
             assertEquals(
                 setOf("ParentWorkflow"),
-                registry.keys()
+                registry.keys
             )
         }
     }

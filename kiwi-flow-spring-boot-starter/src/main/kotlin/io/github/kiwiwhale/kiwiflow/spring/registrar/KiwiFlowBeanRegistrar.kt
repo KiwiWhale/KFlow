@@ -15,9 +15,20 @@ import org.springframework.context.ApplicationContext
 import org.springframework.core.annotation.AnnotatedElementUtils
 
 /**
- * Discovers Spring-managed beans annotated with [Workflow] and registers them as executable workflows.
+ * Discovers Spring-managed beans annotated with [Workflow]
+ * and registers them as executable workflows.
  *
- * Workflow registration is delegated to Core.
+ * Workflow creation is delegated to [SpringWorkflowFactory],
+ * while registration and bootstrap lifecycle management are
+ * delegated to the Core registry infrastructure.
+ *
+ * Discovery and duplicate validation are completed before
+ * registry contributions begin.
+ *
+ * @property applicationContext Spring application context.
+ * @property factory Factory responsible for creating workflows.
+ * @property bootstrap Core bootstrap lifecycle.
+ * @property holder Registry contribution holder.
  */
 class KiwiFlowBeanRegistrar(
     private val applicationContext: ApplicationContext,
@@ -26,32 +37,27 @@ class KiwiFlowBeanRegistrar(
     private val holder: RegistryHolder = KiwiWorkflowHolder
 ) : SmartInitializingSingleton {
 
+    /**
+     * Discovers and registers workflows after singleton initialization.
+     *
+     * Executes the Core lifecycle:
+     * inject -> contribute -> build.
+     *
+     * If the bootstrap has already been injected, the existing
+     * lifecycle is reused without invoking another build callback.
+     */
     override fun afterSingletonsInstantiated() {
-        val discovered = mutableListOf<KiwiWorkflow<*, *>>()
-
-        applicationContext.beanDefinitionNames.forEach { beanName ->
-            discoverBean(beanName)?.let(discovered::addAll)
-        }
-
-        val duplicates = discovered
-            .groupingBy { it.name }
-            .eachCount()
-            .filterValues { it > 1 }
-            .keys
-
-        check(duplicates.isEmpty()) {
-            "Duplicate workflow names found across beans: ${duplicates.joinToString()}"
-        }
+        val workflows = discoverWorkflows()
 
         val build = try {
             bootstrap.inject()
-        } catch (e: BootstrapAlreadyInjectedException) {
+        } catch (_: BootstrapAlreadyInjectedException) {
             null
         }
 
         holder.registryBootstrap(bootstrap) {
             registry(KiwiWorkflowKey.WORKFLOWS) {
-                discovered.forEach { workflow ->
+                workflows.forEach { workflow ->
                     add(workflow.name, workflow)
                 }
             }
@@ -60,16 +66,45 @@ class KiwiFlowBeanRegistrar(
         build?.invoke()
     }
 
+    /**
+     * Discovers all workflows declared by Spring beans.
+     *
+     * @return Workflows in deterministic discovery order.
+     * @throws IllegalStateException If duplicate workflow names are found.
+     */
+    private fun discoverWorkflows(): List<KiwiWorkflow<*, *>> {
+        val workflows = LinkedHashMap<String, KiwiWorkflow<*, *>>()
+
+        for (beanName in applicationContext.beanDefinitionNames) {
+            discoverBean(beanName).forEach { workflow ->
+                check(workflows.putIfAbsent(workflow.name, workflow) == null) {
+                    "Duplicate workflow name '${workflow.name}' found across Spring beans."
+                }
+            }
+        }
+
+        return workflows.values.toList()
+    }
+
+    /**
+     * Discovers workflows declared by a single Spring bean.
+     *
+     * Beans without workflow annotations are skipped without
+     * instantiating or resolving the bean.
+     *
+     * @param beanName Spring bean name.
+     * @return Workflows declared by the bean.
+     */
     private fun discoverBean(
         beanName: String
-    ): List<KiwiWorkflow<*, *>>? {
+    ): List<KiwiWorkflow<*, *>> {
         val beanType = applicationContext.getType(beanName)
-            ?: return null
+            ?: return emptyList()
 
         val candidateAnnotations = findWorkflowAnnotations(beanType)
 
         if (candidateAnnotations.isEmpty()) {
-            return null
+            return emptyList()
         }
 
         val bean = applicationContext.getBean(beanName)
@@ -79,29 +114,25 @@ class KiwiFlowBeanRegistrar(
             .ifEmpty { candidateAnnotations }
             .sortedBy { it.name }
 
-        val result = mutableListOf<KiwiWorkflow<*, *>>()
-        val names = mutableSetOf<String>()
+        val workflows = ArrayList<KiwiWorkflow<*, *>>(annotations.size)
 
-        annotations.forEach { annotation ->
-            val name = annotation.name
-                .takeIf(String::isNotBlank)
-                ?: targetClass.simpleName
-                    .takeIf(String::isNotBlank)
-                ?: beanName
-
-            check(names.add(name)) {
-                "Workflow '$name' is declared multiple times in bean '$beanName'."
-            }
-
-            result += factory.create(
+        for (annotation in annotations) {
+            workflows += factory.create(
                 instance = bean,
-                annotation = annotation
+                annotation = annotation,
+                targetClass = targetClass
             )
         }
 
-        return result
+        return workflows
     }
 
+    /**
+     * Finds direct and composed workflow annotations.
+     *
+     * @param targetClass Class to inspect.
+     * @return Discovered workflow annotations.
+     */
     private fun findWorkflowAnnotations(
         targetClass: Class<*>
     ): Set<Workflow> =

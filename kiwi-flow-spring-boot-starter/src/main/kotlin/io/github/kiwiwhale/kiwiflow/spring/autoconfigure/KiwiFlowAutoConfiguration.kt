@@ -11,17 +11,32 @@ import org.springframework.context.ApplicationContext
 import org.springframework.context.annotation.Bean
 
 /**
- * Autoconfiguration for KiwiFlow's Spring integration.
+ * Provides Spring Boot autoconfiguration for KiwiFlow.
  *
- * Core owns workflow registration and management.
- * Spring provides bean discovery and workflow creation.
+ * Configures the default Core bootstrap, workflow registry,
+ * Spring workflow factory, and workflow bean registrar.
+ *
+ * Each infrastructure component can be replaced by providing
+ * a custom Spring bean of the corresponding type.
+ *
+ * Core remains responsible for workflow registration and lifecycle
+ * management, while Spring provides bean discovery and dependency injection.
+ *
+ * @see KiwiWorkflowBootstrap
+ * @see KiwiWorkflowRegistry
+ * @see SpringWorkflowFactory
+ * @see KiwiFlowBeanRegistrar
  */
 @AutoConfiguration
 class KiwiFlowAutoConfiguration {
 
     /**
-     * Creates the BootstrapHolder bean if not provided.
-     * Defaults to the Core's [KiwiWorkflowBootstrap].
+     * Provides the default Core bootstrap.
+     *
+     * Uses [KiwiWorkflowBootstrap] unless the application provides
+     * another [BootstrapHolder] implementation.
+     *
+     * @return Core workflow bootstrap.
      */
     @Bean
     @ConditionalOnMissingBean(BootstrapHolder::class)
@@ -29,26 +44,47 @@ class KiwiFlowAutoConfiguration {
         KiwiWorkflowBootstrap
 
     /**
-     * Creates the default Core workflow registry backed by the [BootstrapHolder].
+     * Provides the default Core workflow registry.
+     *
+     * The registry delegates workflow access to the configured bootstrap.
+     * Applications can replace it with a custom [KiwiWorkflowRegistry].
+     *
+     * @param bootstrap Bootstrap used by the registry.
+     * @return Core workflow registry.
      */
     @Bean
     @ConditionalOnMissingBean(KiwiWorkflowRegistry::class)
-    fun kiwiWorkflowRegistry(bootstrap: BootstrapHolder): KiwiWorkflowRegistry =
+    fun kiwiWorkflowRegistry(
+        bootstrap: BootstrapHolder
+    ): KiwiWorkflowRegistry =
         KiwiWorkflowRegistry(bootstrap)
 
     /**
-     * Creates the Spring workflow factory.
+     * Provides the default Spring workflow factory.
+     *
+     * Applications can replace this factory to customize
+     * the creation of executable workflows.
+     *
+     * @return Spring workflow factory.
      */
     @Bean
-    @ConditionalOnMissingBean
+    @ConditionalOnMissingBean(SpringWorkflowFactory::class)
     fun springWorkflowFactory(): SpringWorkflowFactory =
         SpringWorkflowFactory()
 
     /**
-     * Creates the workflow bean registrar.
+     * Provides the default workflow bean registrar.
+     *
+     * The registrar discovers annotated Spring beans and contributes
+     * the resulting workflows to the Core registry.
+     *
+     * @param applicationContext Spring application context.
+     * @param factory Factory used to construct workflows.
+     * @param bootstrap Core bootstrap used for registration.
+     * @return Workflow bean registrar.
      */
     @Bean
-    @ConditionalOnMissingBean
+    @ConditionalOnMissingBean(KiwiFlowBeanRegistrar::class)
     fun kiwiFlowBeanRegistrar(
         applicationContext: ApplicationContext,
         factory: SpringWorkflowFactory,

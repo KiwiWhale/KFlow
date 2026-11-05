@@ -1,17 +1,23 @@
 package io.github.kiwiwhale.kiwiflow.spring.annotation
 
+import io.github.kiwiwhale.kiwiflow.annotation.Workflow
 import io.github.kiwiwhale.kiwiflow.spring.autoconfigure.KiwiFlowAutoConfiguration
 import org.springframework.context.annotation.Import
 
 /**
  * Enables KiwiFlow integration in a Spring application.
  *
- * Imports [KiwiFlowAutoConfiguration], which automatically discovers
- * Spring beans annotated with KiwiFlow's [Workflow] annotation
- * and registers them as executable workflows.
+ * Imports [KiwiFlowAutoConfiguration] to configure the infrastructure
+ * required for Spring-managed workflow discovery and registration.
+ *
+ * Spring beans annotated with [Workflow] are discovered automatically
+ * and registered in the Core workflow registry.
+ *
+ * Apply this annotation to a Spring configuration class, typically
+ * the main application class.
  *
  * Example:
- * ```kotlin
+ * ```
  * @SpringBootApplication
  * @EnableKiwiFlow
  * class Application

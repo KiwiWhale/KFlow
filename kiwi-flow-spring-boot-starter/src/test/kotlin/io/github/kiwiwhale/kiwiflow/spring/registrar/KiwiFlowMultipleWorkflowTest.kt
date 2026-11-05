@@ -64,7 +64,7 @@ class KiwiFlowMultipleWorkflowTest {
 
             assertEquals(
                 setOf("FirstWorkflow", "SecondWorkflow"),
-                registry.keys()
+                registry.keys
             )
         }
     }
