@@ -29,7 +29,7 @@ class KiwiFlowPluginExecutionTest {
                 get("/hello/{name}") {
                     val name = call.parameters["name"]!!
 
-                    val result = call.application.KiwiFlow
+                    val result = call.application.kiwiFlow
                         .workflow<String, String>("Hello")
                         .execute(name)
 
@@ -57,7 +57,7 @@ class KiwiFlowPluginExecutionTest {
                 get("/hello/{name}") {
                     val name = call.parameters["name"]!!
 
-                    val result = call.application.KiwiFlow
+                    val result = call.application.kiwiFlow
                         .workflow<String, String>("Hello")
                         .execute(name)
 

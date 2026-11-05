@@ -53,7 +53,6 @@ class KiwiFlowMultipleWorkflowTest {
             KiwiFlowBeanRegistrar(
                 applicationContext = context,
                 factory = factory,
-                registry = registry
             )
         }
 
@@ -65,7 +64,7 @@ class KiwiFlowMultipleWorkflowTest {
 
             assertEquals(
                 setOf("FirstWorkflow", "SecondWorkflow"),
-                registry.names()
+                registry.keys()
             )
         }
     }

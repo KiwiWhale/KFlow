@@ -1,5 +1,6 @@
 package io.github.kiwiwhale.kiwiflow.ktor
 
+import io.github.kiwiwhale.kiwiflow.core.workflow.KiwiWorkflowRegistry
 import io.github.kiwiwhale.kiwiflow.ktor.config.KiwiFlowConfig
 import io.ktor.server.application.createApplicationPlugin
 
@@ -13,8 +14,11 @@ val KiwiFlowPlugin = createApplicationPlugin(
     name = "KiwiFlowPlugin",
     createConfiguration = ::KiwiFlowConfig
 ) {
+    pluginConfig.registerContributions()
+    val registry = KiwiWorkflowRegistry()
+
     application.attributes.put(
         KiwiFlowApplicationKey,
-        KiwiFlowApplication(pluginConfig.registry)
+        KiwiFlowApplication(registry)
     )
 }

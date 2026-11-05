@@ -22,8 +22,8 @@ class KiwiFlowApplicationTest {
                 workflow("Test", workflow)
             }
 
-            assertTrue(KiwiFlow.contains("Test"))
-            assertFalse(KiwiFlow.contains("Unknown"))
+            assertTrue(kiwiFlow.contains("Test"))
+            assertFalse(kiwiFlow.contains("Unknown"))
         }
     }
 
@@ -36,7 +36,7 @@ class KiwiFlowApplicationTest {
 
             assertEquals(
                 setOf("Test"),
-                KiwiFlow.names()
+                kiwiFlow.keys()
             )
         }
     }
@@ -48,7 +48,7 @@ class KiwiFlowApplicationTest {
                 workflow("Test", workflow)
             }
 
-            assertEquals(1, KiwiFlow.size)
+            assertEquals(1, kiwiFlow.size)
         }
     }
 }

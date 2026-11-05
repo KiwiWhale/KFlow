@@ -28,8 +28,8 @@ class KiwiFlowPluginIsolationTest {
                     workflow("First", firstWorkflow)
                 }
 
-                assertTrue(KiwiFlow.contains("First"))
-                assertFalse(KiwiFlow.contains("Second"))
+                assertTrue(kiwiFlow.contains("First"))
+                assertFalse(kiwiFlow.contains("Second"))
             }
         }
 
@@ -39,8 +39,8 @@ class KiwiFlowPluginIsolationTest {
                     workflow("Second", secondWorkflow)
                 }
 
-                assertTrue(KiwiFlow.contains("Second"))
-                assertFalse(KiwiFlow.contains("First"))
+                assertTrue(kiwiFlow.contains("Second"))
+                assertFalse(kiwiFlow.contains("First"))
             }
         }
     }
@@ -55,7 +55,7 @@ class KiwiFlowPluginIsolationTest {
 
                 assertEquals(
                     setOf("First"),
-                    KiwiFlow.names()
+                    kiwiFlow.keys()
                 )
             }
         }
@@ -68,7 +68,7 @@ class KiwiFlowPluginIsolationTest {
 
                 assertEquals(
                     setOf("Second"),
-                    KiwiFlow.names()
+                    kiwiFlow.keys()
                 )
             }
         }

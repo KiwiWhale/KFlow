@@ -8,12 +8,12 @@ import kotlin.test.assertEquals
 class KiwiFlowPluginTest {
 
     @Test
-    fun `KFlowPlugin을 설치할 수 있다`() = testApplication {
+    fun `KiwiFlowPlugin을 설치할 수 있다`() = testApplication {
         application {
             install(KiwiFlowPlugin)
 
-            assertEquals(0, KiwiFlow.size)
-            assertEquals(emptySet(), KiwiFlow.names())
+            assertEquals(0, kiwiFlow.size)
+            assertEquals(emptySet(), kiwiFlow.keys())
         }
     }
 }

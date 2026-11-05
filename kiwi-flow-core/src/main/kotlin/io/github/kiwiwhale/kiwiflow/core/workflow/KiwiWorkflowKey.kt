@@ -1,10 +1,13 @@
 package io.github.kiwiwhale.kiwiflow.core.workflow
 
-import io.github.kiwiwhale.kiwiregistry.RegistryId
-import io.github.kiwiwhale.kiwiregistry.RegistryKey
+import io.github.kiwiwhale.kiwiregistry.core.RegistryId
+import io.github.kiwiwhale.kiwiregistry.core.RegistryKey
 
 /**
- * Typed identifier for a KiwiWorkflow.
+ * Typed identifier for a [KiwiWorkflow].
+ *
+ * A workflow key uniquely identifies a workflow by its name
+ * and preserves its input and output types at compile time.
  *
  * @param I Workflow input type.
  * @param O Workflow output type.
@@ -13,13 +16,11 @@ class KiwiWorkflowKey<I, O>(
     val name: String
 ) {
 
-    val id: RegistryId =
-        RegistryId(NAMESPACE, name)
+    val id: RegistryId = RegistryId(NAMESPACE, name)
 
-    internal val registryKey: RegistryKey<KiwiWorkflow<*, *>> =
-        RegistryKey.of(
-            id,
-            KiwiWorkflow::class
+    internal val registryKey: RegistryKey<String, KiwiWorkflow<*, *>> =
+        RegistryKey.simple(
+            RegistryId(NAMESPACE, "workflows")
         )
 
     init {
@@ -33,6 +34,11 @@ class KiwiWorkflowKey<I, O>(
 
         fun <I, O> of(name: String): KiwiWorkflowKey<I, O> =
             KiwiWorkflowKey(name)
+
+        val WORKFLOWS: RegistryKey<String, KiwiWorkflow<*, *>> =
+            RegistryKey.simple(
+                RegistryId(NAMESPACE, "workflows")
+            )
     }
 
     override fun equals(other: Any?): Boolean =

@@ -2,23 +2,28 @@ package io.github.kiwiwhale.kiwiflow.spring.registrar
 
 import io.github.kiwiwhale.kiwiflow.annotation.Workflow
 import io.github.kiwiwhale.kiwiflow.core.workflow.KiwiWorkflow
-import io.github.kiwiwhale.kiwiflow.core.workflow.KiwiWorkflowRegistry
+import io.github.kiwiwhale.kiwiflow.core.workflow.KiwiWorkflowKey
+import io.github.kiwiwhale.kiwiflow.core.workflow.bootstrap.KiwiWorkflowBootstrap
+import io.github.kiwiwhale.kiwiflow.core.workflow.bootstrap.KiwiWorkflowHolder
 import io.github.kiwiwhale.kiwiflow.spring.factory.SpringWorkflowFactory
+import io.github.kiwiwhale.kiwiregistry.bootstrap.BootstrapHolder
+import io.github.kiwiwhale.kiwiregistry.bootstrap.RegistryHolder
+import io.github.kiwiwhale.kiwiregistry.exception.BootstrapAlreadyInjectedException
 import org.springframework.aop.support.AopUtils
 import org.springframework.beans.factory.SmartInitializingSingleton
 import org.springframework.context.ApplicationContext
 import org.springframework.core.annotation.AnnotatedElementUtils
 
 /**
- * Discovers Spring-managed beans annotated with [Workflow]
- * and registers them as executable workflows.
+ * Discovers Spring-managed beans annotated with [Workflow] and registers them as executable workflows.
  *
  * Workflow registration is delegated to Core.
  */
 class KiwiFlowBeanRegistrar(
     private val applicationContext: ApplicationContext,
     private val factory: SpringWorkflowFactory,
-    private val registry: KiwiWorkflowRegistry
+    private val bootstrap: BootstrapHolder = KiwiWorkflowBootstrap,
+    private val holder: RegistryHolder = KiwiWorkflowHolder
 ) : SmartInitializingSingleton {
 
     override fun afterSingletonsInstantiated() {
@@ -28,7 +33,31 @@ class KiwiFlowBeanRegistrar(
             discoverBean(beanName)?.let(discovered::addAll)
         }
 
-        registry.registerAll(discovered)
+        val duplicates = discovered
+            .groupingBy { it.name }
+            .eachCount()
+            .filterValues { it > 1 }
+            .keys
+
+        check(duplicates.isEmpty()) {
+            "Duplicate workflow names found across beans: ${duplicates.joinToString()}"
+        }
+
+        val build = try {
+            bootstrap.inject()
+        } catch (e: BootstrapAlreadyInjectedException) {
+            null
+        }
+
+        holder.registryBootstrap(bootstrap) {
+            registry(KiwiWorkflowKey.WORKFLOWS) {
+                discovered.forEach { workflow ->
+                    add(workflow.name, workflow)
+                }
+            }
+        }
+
+        build?.invoke()
     }
 
     private fun discoverBean(
@@ -61,8 +90,7 @@ class KiwiFlowBeanRegistrar(
                 ?: beanName
 
             check(names.add(name)) {
-                "Workflow '$name' is declared multiple times " +
-                        "in bean '$beanName'."
+                "Workflow '$name' is declared multiple times in bean '$beanName'."
             }
 
             result += factory.create(

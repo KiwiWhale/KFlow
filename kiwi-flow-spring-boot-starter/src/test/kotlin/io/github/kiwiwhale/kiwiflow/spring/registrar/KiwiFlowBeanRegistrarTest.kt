@@ -41,7 +41,7 @@ class KiwiFlowBeanRegistrarTest {
             val registry = it.getBean(KiwiWorkflowRegistry::class.java)
 
             assertTrue(registry.contains("TestWorkflow"))
-            assertEquals(setOf("TestWorkflow"), registry.names())
+            assertEquals(setOf("TestWorkflow"), registry.keys())
         }
     }
 
@@ -55,7 +55,7 @@ class KiwiFlowBeanRegistrarTest {
             val registry = it.getBean(KiwiWorkflowRegistry::class.java)
 
             assertTrue(registry.contains("MetaWorkflow"))
-            assertEquals(setOf("MetaWorkflow"), registry.names())
+            assertEquals(setOf("MetaWorkflow"), registry.keys())
         }
     }
 
@@ -83,7 +83,6 @@ class KiwiFlowBeanRegistrarTest {
             KiwiFlowBeanRegistrar(
                 applicationContext = context,
                 factory = factory,
-                registry = registry
             )
         }
 

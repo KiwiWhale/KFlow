@@ -1,15 +1,17 @@
 package io.github.kiwiwhale.kiwiflow.spring.autoconfigure
 
 import io.github.kiwiwhale.kiwiflow.core.workflow.KiwiWorkflowRegistry
+import io.github.kiwiwhale.kiwiflow.core.workflow.bootstrap.KiwiWorkflowBootstrap
 import io.github.kiwiwhale.kiwiflow.spring.factory.SpringWorkflowFactory
 import io.github.kiwiwhale.kiwiflow.spring.registrar.KiwiFlowBeanRegistrar
+import io.github.kiwiwhale.kiwiregistry.bootstrap.BootstrapHolder
 import org.springframework.boot.autoconfigure.AutoConfiguration
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.ApplicationContext
 import org.springframework.context.annotation.Bean
 
 /**
- * Auto-configuration for KiwiFlow's Spring integration.
+ * Autoconfiguration for KiwiFlow's Spring integration.
  *
  * Core owns workflow registration and management.
  * Spring provides bean discovery and workflow creation.
@@ -18,12 +20,21 @@ import org.springframework.context.annotation.Bean
 class KiwiFlowAutoConfiguration {
 
     /**
-     * Creates the default Core workflow registry.
+     * Creates the BootstrapHolder bean if not provided.
+     * Defaults to the Core's [KiwiWorkflowBootstrap].
+     */
+    @Bean
+    @ConditionalOnMissingBean(BootstrapHolder::class)
+    fun kiwiWorkflowBootstrap(): BootstrapHolder =
+        KiwiWorkflowBootstrap
+
+    /**
+     * Creates the default Core workflow registry backed by the [BootstrapHolder].
      */
     @Bean
     @ConditionalOnMissingBean(KiwiWorkflowRegistry::class)
-    fun kiwiWorkflowRegistry(): KiwiWorkflowRegistry =
-        KiwiWorkflowRegistry()
+    fun kiwiWorkflowRegistry(bootstrap: BootstrapHolder): KiwiWorkflowRegistry =
+        KiwiWorkflowRegistry(bootstrap)
 
     /**
      * Creates the Spring workflow factory.
@@ -41,11 +52,11 @@ class KiwiFlowAutoConfiguration {
     fun kiwiFlowBeanRegistrar(
         applicationContext: ApplicationContext,
         factory: SpringWorkflowFactory,
-        registry: KiwiWorkflowRegistry
+        bootstrap: BootstrapHolder
     ): KiwiFlowBeanRegistrar =
         KiwiFlowBeanRegistrar(
             applicationContext = applicationContext,
             factory = factory,
-            registry = registry
+            bootstrap = bootstrap
         )
 }

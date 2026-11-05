@@ -26,11 +26,11 @@ class KiwiFlowPluginRegistrationTest {
                 workflow("Hello", helloWorkflow)
             }
 
-            assertTrue(KiwiFlow.contains("Hello"))
+            assertTrue(kiwiFlow.contains("Hello"))
 
             assertEquals(
                 setOf("Hello"),
-                KiwiFlow.names()
+                kiwiFlow.keys()
             )
         }
     }
@@ -49,10 +49,10 @@ class KiwiFlowPluginRegistrationTest {
 
             assertEquals(
                 setOf("Hello", "Payment"),
-                KiwiFlow.names()
+                kiwiFlow.keys()
             )
 
-            assertEquals(2, KiwiFlow.size)
+            assertEquals(2, kiwiFlow.size)
         }
     }
 
@@ -64,7 +64,7 @@ class KiwiFlowPluginRegistrationTest {
             }
 
             val result =
-                KiwiFlow.workflow<String, String>("Hello")
+                kiwiFlow.workflow<String, String>("Hello")
 
             assertEquals(
                 "Hello Ktor",

@@ -53,7 +53,6 @@ class KiwiFlowDuplicateWorkflowTest {
             KiwiFlowBeanRegistrar(
                 applicationContext = context,
                 factory = factory,
-                registry = registry
             )
         }
 

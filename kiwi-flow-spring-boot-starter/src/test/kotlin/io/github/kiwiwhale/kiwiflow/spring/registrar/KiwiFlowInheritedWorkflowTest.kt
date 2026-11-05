@@ -36,7 +36,7 @@ class KiwiFlowInheritedWorkflowTest {
 
             assertEquals(
                 setOf("ParentWorkflow"),
-                registry.names()
+                registry.keys()
             )
         }
     }
@@ -81,7 +81,6 @@ class KiwiFlowInheritedWorkflowTest {
             KiwiFlowBeanRegistrar(
                 applicationContext = context,
                 factory = factory,
-                registry = registry
             )
         }
 

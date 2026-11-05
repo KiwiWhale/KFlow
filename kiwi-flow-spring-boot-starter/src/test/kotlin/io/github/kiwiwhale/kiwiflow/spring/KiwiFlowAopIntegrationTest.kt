@@ -65,7 +65,6 @@ class KiwiFlowAopIntegrationTest {
             KiwiFlowBeanRegistrar(
                 applicationContext = context,
                 factory = factory,
-                registry = registry
             )
         }
 

@@ -11,7 +11,6 @@ import org.springframework.context.annotation.Import
  * and registers them as executable workflows.
  *
  * Example:
- *
  * ```kotlin
  * @SpringBootApplication
  * @EnableKiwiFlow
