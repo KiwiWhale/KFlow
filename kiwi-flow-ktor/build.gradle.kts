@@ -5,4 +5,5 @@ dependencies {
     api(libs.ktor.server.core)
 
     testImplementation(libs.ktor.server.test.host)
+    testRuntimeOnly(libs.logback.classic)
 }

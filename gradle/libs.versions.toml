@@ -5,9 +5,12 @@ kotlinx = "1.11.0"
 springBoot = "4.1.2"
 ktor = "3.6.1"
 
+logback = "1.6.6"
+
 dokka = "2.2.0"
 
 kiwi-registry = "1.2.2-SNAPSHOT"
+
 
 [libraries]
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx" }
@@ -20,6 +23,9 @@ ktor-bom = { module = "io.ktor:ktor-bom", version.ref = "ktor" }
 ktor-server-core = { module = "io.ktor:ktor-server-core" }
 ktor-server-test-host = { module = "io.ktor:ktor-server-test-host" }
 
+logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
+
+# Kiwi
 kiwi-registry = { module = "io.github.kiwiwhale:kiwi-registry", version.ref = "kiwi-registry" }
 
 [plugins]
