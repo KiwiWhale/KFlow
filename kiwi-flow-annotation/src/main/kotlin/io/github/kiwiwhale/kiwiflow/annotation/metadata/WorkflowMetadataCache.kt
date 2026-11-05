@@ -6,52 +6,61 @@ import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
 
 /**
- * Caches resolved workflow metadata by Kotlin class.
+ * Caches resolved workflow metadata.
  *
- * Metadata discovery is performed only once per class for the
- * default annotation-discovery path.
- *
- * Explicit workflow annotations are inspected independently because
- * they may represent different workflow configurations for the
- * same target class.
- *
- * @property inspector Inspector responsible for resolving workflow metadata.
- *
- * @see WorkflowInspector
- * @see WorkflowMetadata
+ * Default annotation discovery and explicit workflow
+ * configurations are cached independently.
  */
 internal class WorkflowMetadataCache(
     private val inspector: WorkflowInspector
 ) {
 
-    private val cache =
+    private val defaultCache =
         ConcurrentHashMap<KClass<*>, WorkflowMetadata>()
 
-    /**
-     * Returns cached metadata for the specified workflow class.
-     *
-     * If metadata has not been resolved yet, it is inspected
-     * and stored in the cache.
-     *
-     * @param targetClass Kotlin class to inspect.
-     * @return Resolved workflow metadata.
-     * @throws InvalidWorkflowException If workflow metadata is invalid.
-     */
-    fun get(targetClass: KClass<*>): WorkflowMetadata =
-        cache.computeIfAbsent(targetClass, inspector::inspect)
+    private val explicitCache =
+        ConcurrentHashMap<ExplicitCacheKey, WorkflowMetadata>()
 
-    /**
-     * Resolves workflow metadata using an explicit annotation.
-     *
-     * Explicit annotations bypass the default metadata cache
-     * because their configuration may differ from the annotation
-     * declared on the target class.
-     *
-     * @param targetClass Kotlin class to inspect.
-     * @param annotation Explicit workflow annotation.
-     * @return Resolved workflow metadata.
-     * @throws InvalidWorkflowException If workflow metadata is invalid.
-     */
-    fun get(targetClass: KClass<*>, annotation: Workflow): WorkflowMetadata =
-        inspector.inspect(targetClass, annotation)
+    fun get(targetClass: KClass<*>): WorkflowMetadata =
+        defaultCache.computeIfAbsent(targetClass) {
+            inspector.inspect(it)
+        }
+
+    fun get(
+        targetClass: KClass<*>,
+        annotation: Workflow
+    ): WorkflowMetadata {
+        val key = ExplicitCacheKey(
+            targetClass = targetClass,
+            annotation = annotation
+        )
+
+        return explicitCache.computeIfAbsent(key) {
+            inspector.inspect(
+                kClass = targetClass,
+                annotation = annotation
+            )
+        }
+    }
+
+    fun evict(targetClass: KClass<*>) {
+        defaultCache.remove(targetClass)
+
+        explicitCache.keys.removeIf {
+            it.targetClass == targetClass
+        }
+    }
+
+    fun clear() {
+        defaultCache.clear()
+        explicitCache.clear()
+    }
+
+    val size: Int
+        get() = defaultCache.size + explicitCache.size
+
+    private data class ExplicitCacheKey(
+        val targetClass: KClass<*>,
+        val annotation: Workflow
+    )
 }

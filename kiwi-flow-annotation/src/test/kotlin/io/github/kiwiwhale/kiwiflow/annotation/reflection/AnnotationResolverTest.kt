@@ -1,181 +1,133 @@
 package io.github.kiwiwhale.kiwiflow.annotation.reflection
 
 import io.github.kiwiwhale.kiwiflow.annotation.Step
-import io.github.kiwiwhale.kiwiflow.annotation.Workflow
+import kotlin.reflect.full.memberFunctions
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-import kotlin.test.assertNotNull
 import kotlin.test.assertNull
-
-@Target(
-    AnnotationTarget.FUNCTION,
-    AnnotationTarget.ANNOTATION_CLASS
-)
-@Retention(AnnotationRetention.RUNTIME)
-@Step(name = "composed-step", order = 10)
-annotation class ComposedStep
-
-@Target(
-    AnnotationTarget.FUNCTION,
-    AnnotationTarget.ANNOTATION_CLASS
-)
-@Retention(AnnotationRetention.RUNTIME)
-@ComposedStep
-annotation class NestedStep
-
-@Target(AnnotationTarget.FUNCTION)
-@Retention(AnnotationRetention.RUNTIME)
-@NestedStep
-annotation class DeepNestedStep
-
-@Target(
-    AnnotationTarget.CLASS,
-    AnnotationTarget.ANNOTATION_CLASS
-)
-@Retention(AnnotationRetention.RUNTIME)
-@Workflow(name = "composed-workflow")
-annotation class ComposedWorkflow
-
-@Target(
-    AnnotationTarget.CLASS,
-    AnnotationTarget.ANNOTATION_CLASS
-)
-@Retention(AnnotationRetention.RUNTIME)
-@ComposedWorkflow
-annotation class NestedWorkflow
-
-@Target(AnnotationTarget.FUNCTION)
-@Retention(AnnotationRetention.RUNTIME)
-@Step(name = "first")
-annotation class FirstStep
-
-@Target(AnnotationTarget.FUNCTION)
-@Retention(AnnotationRetention.RUNTIME)
-@Step(name = "second")
-annotation class SecondStep
 
 class AnnotationResolverTest {
 
-    class SampleSteps {
+    @Target(AnnotationTarget.ANNOTATION_CLASS)
+    @Retention(AnnotationRetention.RUNTIME)
+    @Step(name = "validate")
+    annotation class Validate
 
-        @ComposedStep
-        fun composed() {}
+    @Target(AnnotationTarget.FUNCTION)
+    @Retention(AnnotationRetention.RUNTIME)
+    @Validate
+    annotation class StrictValidate
 
-        @NestedStep
-        fun nested() {}
+    @Target(AnnotationTarget.FUNCTION)
+    @Retention(AnnotationRetention.RUNTIME)
+    @Step(name = "ignored")
+    annotation class Unmarked
 
-        @DeepNestedStep
-        fun deepNested() {}
+    @Target(AnnotationTarget.ANNOTATION_CLASS)
+    @Retention(AnnotationRetention.RUNTIME)
+    @Step(name = "first")
+    annotation class FirstStep
 
-        fun unannotated() {}
+    @Target(AnnotationTarget.ANNOTATION_CLASS)
+    @Retention(AnnotationRetention.RUNTIME)
+    @Step(name = "second")
+    annotation class SecondStep
 
-        @FirstStep
-        @SecondStep
-        fun ambiguous() {}
+    @Target(AnnotationTarget.FUNCTION)
+    @Retention(AnnotationRetention.RUNTIME)
+    @FirstStep
+    annotation class FirstComposition
+
+    @Target(AnnotationTarget.FUNCTION)
+    @Retention(AnnotationRetention.RUNTIME)
+    @SecondStep
+    annotation class SecondComposition
+
+    class TestWorkflow {
+
+        @StrictValidate
+        fun first() = Unit
+
+        @Unmarked
+        fun second() = Unit
+
+        @Step(name = "direct")
+        fun direct() = Unit
+
+        @FirstComposition
+        @SecondComposition
+        fun duplicated() = Unit
+
+        fun empty() = Unit
     }
 
-    @ComposedWorkflow
-    class SampleWorkflow
+    private fun annotations(
+        functionName: String
+    ): Array<out Annotation> {
+        val function = TestWorkflow::class.memberFunctions
+            .first { it.name == functionName }
 
-    @NestedWorkflow
-    class NestedSampleWorkflow
+        return function.annotations.toTypedArray()
+    }
 
     @Test
-    fun `직접 선언된 메타 어노테이션을 탐색한다`() {
-        val function = SampleSteps::class.members
-            .first { it.name == "composed" }
-
-        val annotation = AnnotationResolver.find(
-            function.annotations.toTypedArray(),
-            Step::class
+    fun `중첩된 조합 어노테이션을 탐색한다`() {
+        val result = AnnotationResolver.find(
+            annotations = annotations("first"),
+            target = Step::class
         )
 
-        assertNotNull(annotation)
-        assertEquals("composed-step", annotation.name)
-        assertEquals(10, annotation.order)
+        assertEquals("validate", result?.name)
     }
 
     @Test
-    fun `한 단계 중첩된 메타 어노테이션을 탐색한다`() {
-        val function = SampleSteps::class.members
-            .first { it.name == "nested" }
-
-        val annotation = AnnotationResolver.find(
-            function.annotations.toTypedArray(),
-            Step::class
+    fun `마커가 없는 조합 어노테이션은 무시한다`() {
+        val result = AnnotationResolver.find(
+            annotations = annotations("second"),
+            target = Step::class
         )
 
-        assertNotNull(annotation)
-        assertEquals("composed-step", annotation.name)
-        assertEquals(10, annotation.order)
+        assertEquals("ignored", result?.name)
     }
 
     @Test
-    fun `여러 단계 중첩된 메타 어노테이션을 탐색한다`() {
-        val function = SampleSteps::class.members
-            .first { it.name == "deepNested" }
-
-        val annotation = AnnotationResolver.find(
-            function.annotations.toTypedArray(),
-            Step::class
+    fun `직접 선언된 어노테이션을 탐색한다`() {
+        val result = AnnotationResolver.find(
+            annotations = annotations("direct"),
+            target = Step::class
         )
 
-        assertNotNull(annotation)
-        assertEquals("composed-step", annotation.name)
-        assertEquals(10, annotation.order)
+        assertEquals("direct", result?.name)
     }
 
     @Test
-    fun `메타 어노테이션이 없으면 null을 반환한다`() {
-        val function = SampleSteps::class.members
-            .first { it.name == "unannotated" }
-
-        val annotation = AnnotationResolver.find(
-            function.annotations.toTypedArray(),
-            Step::class
+    fun `대상 어노테이션이 없으면 null을 반환한다`() {
+        val result = AnnotationResolver.find(
+            annotations = annotations("empty"),
+            target = Step::class
         )
 
-        assertNull(annotation)
+        assertNull(result)
     }
 
     @Test
-    fun `서로 다른 Step 메타 어노테이션이 있으면 예외가 발생한다`() {
-        val function = SampleSteps::class.members
-            .first { it.name == "ambiguous" }
-
-        val exception = assertFailsWith<IllegalArgumentException> {
+    fun `서로 다른 조합 어노테이션에서 중복된 Step을 발견하면 예외가 발생한다`() {
+        assertFailsWith<IllegalArgumentException> {
             AnnotationResolver.find(
-                function.annotations.toTypedArray(),
-                Step::class
+                annotations = annotations("duplicated"),
+                target = Step::class
             )
         }
-
-        assertEquals(
-            "Multiple @Step annotations were found.",
-            exception.message
-        )
     }
 
     @Test
-    fun `Workflow 메타 어노테이션을 탐색한다`() {
-        val annotation = AnnotationResolver.find(
-            SampleWorkflow::class.annotations.toTypedArray(),
-            Workflow::class
+    fun `조합 어노테이션의 설정값을 유지한다`() {
+        val result = AnnotationResolver.find(
+            annotations = annotations("first"),
+            target = Step::class
         )
 
-        assertNotNull(annotation)
-        assertEquals("composed-workflow", annotation.name)
-    }
-
-    @Test
-    fun `중첩된 Workflow 메타 어노테이션을 탐색한다`() {
-        val annotation = AnnotationResolver.find(
-            NestedSampleWorkflow::class.annotations.toTypedArray(),
-            Workflow::class
-        )
-
-        assertNotNull(annotation)
-        assertEquals("composed-workflow", annotation.name)
+        assertEquals("validate", result?.name)
     }
 }

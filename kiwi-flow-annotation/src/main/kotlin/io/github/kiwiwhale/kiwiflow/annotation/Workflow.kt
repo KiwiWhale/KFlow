@@ -3,12 +3,14 @@ package io.github.kiwiwhale.kiwiflow.annotation
 /**
  * Declares a class as a KiwiFlow workflow.
  *
- * A workflow consists of one or more methods annotated with [Step].
- * Annotated steps are discovered through reflection and executed
+ * A workflow consists of one or more functions annotated with [Step].
+ * Steps are discovered through Kotlin reflection and executed
  * sequentially according to their configured order.
  *
- * This annotation can also be used as a meta-annotation to define
- * custom workflow annotations.
+ * Inherited member functions are also considered during discovery.
+ *
+ * This annotation can be composed into custom workflow annotations
+ * using [KiwiFlowAnnotation].
  *
  * Example:
  *
@@ -24,8 +26,11 @@ package io.github.kiwiwhale.kiwiflow.annotation
  * }
  * ```
  *
- * @property name The workflow name. When blank, the annotated class
- * name is used.
+ * @property name Explicit workflow name. When blank, the class
+ * simple name is used.
+ *
+ * @see Step
+ * @see KiwiFlowAnnotation
  */
 @Target(
     AnnotationTarget.CLASS,

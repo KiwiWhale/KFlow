@@ -1,34 +1,44 @@
 package io.github.kiwiwhale.kiwiflow.annotation.metadata
 
+import java.util.Collections
+
 /**
- * Represents the resolved metadata of an annotated workflow.
+ * Immutable metadata describing an annotated workflow.
  *
- * Contains the workflow name and its ordered step definitions.
- *
- * The supplied step collection is defensively copied to prevent
- * modifications to the original collection from affecting
- * this metadata instance.
- *
- * @property name Resolved workflow name.
- * @property steps Immutable view of the workflow's ordered steps.
- *
- * @see StepMetadata
+ * Contains the resolved workflow name and an immutable
+ * snapshot of its ordered steps.
  */
 internal class WorkflowMetadata(
     val name: String,
     steps: List<StepMetadata>
 ) {
 
-    /**
-     * Ordered workflow steps.
-     *
-     * The collection is copied during construction.
-     */
-    val steps: List<StepMetadata> = steps.toList()
+    val steps: List<StepMetadata>
 
     init {
         require(name.isNotBlank()) {
             "Workflow name cannot be blank."
         }
+
+        require(steps.isNotEmpty()) {
+            "Workflow must contain at least one step."
+        }
+
+        val snapshot = ArrayList(steps)
+
+        require(snapshot.all { it.name.isNotBlank() }) {
+            "Workflow step names cannot be blank."
+        }
+
+        require(
+            snapshot.map { it.name }.distinct().size == snapshot.size
+        ) {
+            "Workflow step names must be unique."
+        }
+
+        this.steps = Collections.unmodifiableList(snapshot)
     }
+
+    override fun toString(): String =
+        "WorkflowMetadata(name='$name', steps=${steps.size})"
 }

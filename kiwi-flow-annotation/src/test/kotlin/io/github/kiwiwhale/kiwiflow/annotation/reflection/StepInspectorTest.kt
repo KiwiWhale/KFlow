@@ -3,6 +3,7 @@ package io.github.kiwiwhale.kiwiflow.annotation.reflection
 import io.github.kiwiwhale.kiwiflow.annotation.Retry
 import io.github.kiwiwhale.kiwiflow.annotation.Step
 import io.github.kiwiwhale.kiwiflow.annotation.exception.InvalidStepException
+import kotlin.reflect.KParameter
 import kotlin.reflect.full.memberFunctions
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -166,5 +167,21 @@ class StepInspectorTest {
         assertEquals("custom-step", metadata.name)
         assertEquals(5, metadata.order)
         assertEquals(1000, metadata.timeout?.inWholeMilliseconds)
+    }
+
+    @Test
+    fun `입력 파라미터를 VALUE 종류로 정확하게 찾는다`() {
+        val function = SampleSteps::class.memberFunctions
+            .first { it.name == "customName" }
+
+        val metadata = inspector.inspect(function)
+
+        assertNotNull(metadata)
+        assertEquals(
+            function.parameters.single {
+                it.kind == KParameter.Kind.VALUE
+            },
+            metadata.inputParameter
+        )
     }
 }

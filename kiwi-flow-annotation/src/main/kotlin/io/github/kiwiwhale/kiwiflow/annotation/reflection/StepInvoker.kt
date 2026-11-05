@@ -1,30 +1,31 @@
 package io.github.kiwiwhale.kiwiflow.annotation.reflection
 
 import io.github.kiwiwhale.kiwiflow.annotation.metadata.StepMetadata
-import kotlin.reflect.full.callSuspend
+import kotlin.reflect.KClass
+import kotlin.reflect.KParameter
+import kotlin.reflect.full.callSuspendBy
 
 /**
- * Invokes workflow step functions through Kotlin reflection.
+ * Invokes workflow steps using Kotlin reflection.
  *
- * Supports both regular and suspend member functions, with
- * optional input parameter forwarding.
+ * Supports regular and suspend member functions with
+ * zero or one input parameter.
+ *
+ * Arguments are mapped explicitly using KParameter
+ * to avoid relying on reflection parameter ordering.
  */
 internal class StepInvoker {
 
     /**
-     * Invokes the specified workflow step.
-     *
-     * The supplied input is passed to the step when it declares
-     * an input parameter. Parameterless steps are invoked without
-     * an input argument.
-     *
-     * Suspend functions are invoked through [KFunction.callSuspend].
+     * Invokes a workflow step.
      *
      * @param metadata Metadata describing the step.
      * @param instance Instance containing the step function.
      * @param input Input value passed to the step, if applicable.
      * @return Result produced by the step.
-     * @throws Exception If reflective invocation fails.
+     *
+     * @throws IllegalArgumentException If the instance or input
+     * is incompatible with the reflected function.
      */
     suspend fun invoke(
         metadata: StepMetadata,
@@ -32,20 +33,99 @@ internal class StepInvoker {
         input: Any?
     ): Any? {
         val function = metadata.function
-        val parameter = metadata.inputParameter
 
-        return when {
-            function.isSuspend && parameter != null ->
-                function.callSuspend(instance, input)
+        val instanceParameter = function.parameters
+            .firstOrNull {
+                it.kind == KParameter.Kind.INSTANCE
+            }
+            ?: throw IllegalStateException(
+                "Step function must have an instance receiver: ${function.name}"
+            )
 
-            function.isSuspend ->
-                function.callSuspend(instance)
+        validateInstance(
+            functionName = function.name,
+            parameter = instanceParameter,
+            instance = instance
+        )
 
-            parameter != null ->
-                function.call(instance, input)
+        val arguments = buildArguments(
+            metadata = metadata,
+            instanceParameter = instanceParameter,
+            instance = instance,
+            input = input
+        )
 
-            else ->
-                function.call(instance)
+        return if (function.isSuspend) {
+            function.callSuspendBy(arguments)
+        } else {
+            function.callBy(arguments)
+        }
+    }
+
+    private fun buildArguments(
+        metadata: StepMetadata,
+        instanceParameter: KParameter,
+        instance: Any,
+        input: Any?
+    ): Map<KParameter, Any?> {
+        val arguments = mutableMapOf<KParameter, Any?>(
+            instanceParameter to instance
+        )
+
+        val inputParameter = metadata.inputParameter
+
+        if (inputParameter != null) {
+            validateInput(
+                functionName = metadata.function.name,
+                parameter = inputParameter,
+                input = input
+            )
+
+            arguments[inputParameter] = input
+        }
+
+        return arguments
+    }
+
+    private fun validateInstance(
+        functionName: String,
+        parameter: KParameter,
+        instance: Any
+    ) {
+        val expectedClass = parameter.type.classifier as? KClass<*>
+            ?: throw IllegalStateException(
+                "Cannot resolve instance receiver type: $functionName"
+            )
+
+        require(expectedClass.isInstance(instance)) {
+            "Invalid invocation target for '$functionName'. " +
+                    "Expected ${expectedClass.qualifiedName}, " +
+                    "but received ${instance::class.qualifiedName}."
+        }
+    }
+
+    private fun validateInput(
+        functionName: String,
+        parameter: KParameter,
+        input: Any?
+    ) {
+        val expectedClass = parameter.type.classifier as? KClass<*>
+            ?: throw IllegalStateException(
+                "Cannot resolve input parameter type: $functionName"
+            )
+
+        if (input == null) {
+            require(parameter.type.isMarkedNullable) {
+                "Step '$functionName' does not accept null input."
+            }
+
+            return
+        }
+
+        require(expectedClass.isInstance(input)) {
+            "Invalid input for step '$functionName'. " +
+                    "Expected ${parameter.type}, " +
+                    "but received ${input::class.qualifiedName}."
         }
     }
 }

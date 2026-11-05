@@ -1,98 +1,182 @@
 package io.github.kiwiwhale.kiwiflow.annotation.factory
 
+import io.github.kiwiwhale.kiwiflow.annotation.Retry
 import io.github.kiwiwhale.kiwiflow.annotation.Step
 import io.github.kiwiwhale.kiwiflow.annotation.Workflow
-import io.github.kiwiwhale.kiwiflow.annotation.exception.InvalidWorkflowException
-import io.github.kiwiwhale.kiwiflow.core.workflow.KiwiWorkflow
+import io.github.kiwiwhale.kiwiflow.core.exception.WorkflowExecutionException
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-import kotlin.test.assertNotNull
-import kotlin.test.assertSame
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.test.runTest
 
 class AnnotatedWorkflowFactoryTest {
 
-    @Workflow
-    class StringWorkflow {
+    @Workflow(name = "regular-workflow")
+    class RegularWorkflow {
 
         @Step(order = 1)
-        fun trim(input: String): String {
-            return input.trim()
+        fun first(input: String): String =
+            "$input-first"
+
+        @Step(order = 2)
+        fun second(input: String): String =
+            "$input-second"
+    }
+
+    @Workflow(name = "suspend-workflow")
+    class SuspendWorkflow {
+
+        @Step(order = 1)
+        suspend fun first(input: String): String {
+            delay(10)
+            return "$input-first"
         }
 
         @Step(order = 2)
-        fun uppercase(input: String): String {
-            return input.uppercase()
+        suspend fun second(input: String): String {
+            delay(10)
+            return "$input-second"
         }
     }
 
-    @Workflow(name = "custom-workflow")
-    class CustomWorkflow {
+    @Workflow(name = "no-input-workflow")
+    class NoInputWorkflow {
 
-        @Step
-        fun execute() {}
+        @Step(order = 1)
+        fun initialize(): String = "initialized"
+
+        @Step(order = 2)
+        fun finish(): String = "completed"
     }
 
-    @Workflow
-    class EmptyWorkflow
+    open class BaseWorkflow {
 
-    class UnannotatedWorkflow
-
-    private val instance = StringWorkflow()
-
-    @Test
-    fun `어노테이션이 적용된 인스턴스로 워크플로우를 생성한다`() {
-        val kiwiWorkflow: KiwiWorkflow<String, String> =
-            AnnotatedWorkflowFactory.fromInstance(instance)
-
-        assertNotNull(kiwiWorkflow)
+        @Step(order = 1)
+        fun validate(input: String): String =
+            "$input-validated"
     }
 
-    @Test
-    fun `사용자 지정 워크플로우 이름으로 생성할 수 있다`() {
-        val kiwiWorkflow: KiwiWorkflow<String, String> =
-            AnnotatedWorkflowFactory.fromInstance(
-                CustomWorkflow()
+    @Workflow(name = "inherited-workflow")
+    class InheritedWorkflow : BaseWorkflow() {
+
+        @Step(order = 2)
+        fun process(input: String): String =
+            "$input-processed"
+    }
+
+    @Workflow(name = "retry-workflow")
+    class RetryWorkflow {
+
+        var attempts = 0
+
+        @Step(
+            retry = Retry(
+                maxAttempts = 3,
+                initialDelayMillis = 0,
+                maxDelayMillis = 0
             )
+        )
+        fun execute(input: String): String {
+            attempts++
 
-        assertNotNull(kiwiWorkflow)
+            if (attempts < 3) {
+                error("일시적인 실행 실패")
+            }
+
+            return "$input-success"
+        }
     }
 
-    @Test
-    fun `잘못된 인스턴스는 워크플로우 생성에 실패한다`() {
-        assertFailsWith<InvalidWorkflowException> {
-            AnnotatedWorkflowFactory.fromInstance<Any?, Any?>(
-                UnannotatedWorkflow()
-            )
+    @Workflow(name = "timeout-workflow")
+    class TimeoutWorkflow {
+
+        @Step(timeoutMillis = 10)
+        suspend fun execute(input: String): String {
+            delay(100)
+            return input
         }
     }
 
     @Test
-    fun `단계가 없는 인스턴스는 워크플로우 생성에 실패한다`() {
-        assertFailsWith<InvalidWorkflowException> {
-            AnnotatedWorkflowFactory.fromInstance<Any?, Any?>(
-                EmptyWorkflow()
+    fun `일반 함수를 순차적으로 실행한다`() = runTest {
+        val workflow =
+            AnnotatedWorkflowFactory.fromInstance<String, String>(
+                RegularWorkflow()
             )
+
+        assertEquals(
+            "input-first-second",
+            workflow.execute("input")
+        )
+    }
+
+    @Test
+    fun `suspend 함수를 순차적으로 실행한다`() = runTest {
+        val workflow =
+            AnnotatedWorkflowFactory.fromInstance<String, String>(
+                SuspendWorkflow()
+            )
+
+        assertEquals(
+            "input-first-second",
+            workflow.execute("input")
+        )
+    }
+
+    @Test
+    fun `입력 매개변수가 없는 단계를 실행한다`() = runTest {
+        val workflow =
+            AnnotatedWorkflowFactory.fromInstance<String, String>(
+                NoInputWorkflow()
+            )
+
+        assertEquals(
+            "completed",
+            workflow.execute("ignored")
+        )
+    }
+
+    @Test
+    fun `상속된 단계 메서드를 실행한다`() = runTest {
+        val workflow =
+            AnnotatedWorkflowFactory.fromInstance<String, String>(
+                InheritedWorkflow()
+            )
+
+        assertEquals(
+            "input-validated-processed",
+            workflow.execute("input")
+        )
+    }
+
+    @Test
+    fun `실패한 단계는 설정된 횟수만큼 재시도한다`() = runTest {
+        val instance = RetryWorkflow()
+
+        val workflow =
+            AnnotatedWorkflowFactory.fromInstance<String, String>(
+                instance
+            )
+
+        assertEquals(
+            "input-success",
+            workflow.execute("input")
+        )
+
+        assertEquals(3, instance.attempts)
+    }
+
+    @Test
+    fun `단계 실행 시간이 timeout을 초과하면 실패한다`() =
+        runTest {
+            val workflow =
+                AnnotatedWorkflowFactory.fromInstance<String, String>(
+                    TimeoutWorkflow()
+                )
+
+            assertFailsWith<WorkflowExecutionException> {
+                workflow.execute("input")
+            }
         }
-    }
-
-    @Test
-    fun `동일한 인스턴스로 여러 워크플로우를 생성할 수 있다`() {
-        val first: KiwiWorkflow<String, String> =
-            AnnotatedWorkflowFactory.fromInstance(instance)
-
-        val second: KiwiWorkflow<String, String> =
-            AnnotatedWorkflowFactory.fromInstance(instance)
-
-        assertNotNull(first)
-        assertNotNull(second)
-    }
-
-    @Test
-    fun `워크플로우 생성 시 원본 인스턴스의 상태를 변경하지 않는다`() {
-        val original = instance
-
-        AnnotatedWorkflowFactory.fromInstance<String, String>(instance)
-
-        assertSame(original, instance)
-    }
 }

@@ -1,7 +1,6 @@
 package io.github.kiwiwhale.kiwiflow.annotation.factory
 
 import io.github.kiwiwhale.kiwiflow.annotation.Workflow
-import io.github.kiwiwhale.kiwiflow.annotation.exception.InvalidWorkflowException
 import io.github.kiwiwhale.kiwiflow.annotation.metadata.WorkflowMetadata
 import io.github.kiwiwhale.kiwiflow.annotation.metadata.WorkflowMetadataCache
 import io.github.kiwiwhale.kiwiflow.annotation.reflection.StepInspector
@@ -13,186 +12,169 @@ import io.github.kiwiwhale.kiwiflow.core.workflow.KiwiWorkflowKey
 import kotlin.reflect.KClass
 
 /**
- * Factory for creating [KiwiWorkflow] instances from annotated Kotlin objects.
+ * Factory for creating executable workflows from annotated Kotlin objects.
  *
- * Discovers workflow and step metadata through Kotlin reflection
- * and converts annotated functions into executable workflow steps.
+ * The factory discovers workflow metadata through Kotlin reflection
+ * and compiles the resolved metadata into a [KiwiWorkflow].
  *
- * Workflow metadata is cached by the target [KClass] to avoid
- * repeated reflection during workflow creation.
+ * Workflow creation consists of three stages:
  *
- * The factory supports:
+ * 1. Validate the workflow instance and target class.
+ * 2. Resolve workflow metadata.
+ * 3. Compile metadata into an executable workflow.
  *
- * - Workflow discovery through [Workflow].
- * - Step discovery through [io.github.kiwiwhale.kiwiflow.annotation.Step].
- * - Sequential step execution based on step ordering.
+ * Metadata discovery is cached for the default annotation-discovery path.
+ * Explicit annotation configurations are inspected independently.
+ *
+ * This factory supports:
+ *
+ * - Direct and composed workflow annotations.
+ * - Ordered step execution.
  * - Per-step timeout configuration.
  * - Per-step retry configuration.
- * - Regular and suspend Kotlin functions.
- *
- * Example:
- *
- * ```
- * @Workflow(name = "example")
- * class ExampleWorkflow {
- *
- *     @Step(order = 1)
- *     fun first(input: String): String = input
- *
- *     @Step(order = 2)
- *     suspend fun second(input: String): String = input
- * }
- *
- * val workflow = AnnotatedWorkflowFactory
- *     .fromInstance<String, String>(ExampleWorkflow())
- * ```
+ * - Regular and suspend functions.
+ * - Zero-argument and single-input step functions.
  *
  * @see WorkflowInspector
- * @see StepInspector
  * @see StepInvoker
+ * @see WorkflowMetadata
  */
 object AnnotatedWorkflowFactory {
 
-    private val workflowInspector = WorkflowInspector(
-        stepInspector = StepInspector()
-    )
-
-    private val metadataCache = WorkflowMetadataCache(
-        inspector = workflowInspector
-    )
-
-    private val stepInvoker = StepInvoker()
-
-    /**
-     * Creates a workflow from an annotated instance.
-     *
-     * The Kotlin runtime class of [instance] is used for metadata discovery.
-     *
-     * @param I Workflow input type.
-     * @param O Workflow output type.
-     * @param instance Annotated workflow instance.
-     * @return Executable workflow.
-     * @throws InvalidWorkflowException If workflow metadata is invalid.
-     */
-    fun <I, O> fromInstance(
-        instance: Any
-    ): KiwiWorkflow<I, O> {
-        return fromInstance(
-            instance = instance,
-            targetClass = instance::class
+    private val metadataCache: WorkflowMetadataCache by lazy {
+        WorkflowMetadataCache(
+            inspector = WorkflowInspector(
+                stepInspector = StepInspector()
+            )
         )
     }
 
+    private val stepInvoker: StepInvoker by lazy {
+        StepInvoker()
+    }
+
+    /**
+     * Creates a workflow using the runtime class of the instance.
+     */
+    fun <I, O> fromInstance(
+        instance: Any
+    ): KiwiWorkflow<I, O> =
+        createWorkflow(
+            instance = instance,
+            targetClass = instance::class
+        )
+
     /**
      * Creates a workflow using an explicitly supplied annotation.
-     *
-     * The supplied annotation overrides annotation discovery
-     * on the target class.
-     *
-     * @param I Workflow input type.
-     * @param O Workflow output type.
-     * @param instance Workflow instance.
-     * @param annotation Workflow annotation.
-     * @return Executable workflow.
-     * @throws InvalidWorkflowException If workflow metadata is invalid.
      */
     fun <I, O> fromInstance(
         instance: Any,
         annotation: Workflow
-    ): KiwiWorkflow<I, O> {
-        return fromInstance(
+    ): KiwiWorkflow<I, O> =
+        createWorkflow(
             instance = instance,
-            annotation = annotation,
-            targetClass = instance::class
+            targetClass = instance::class,
+            annotation = annotation
         )
-    }
 
     /**
-     * Creates a workflow using an explicitly supplied Kotlin class.
+     * Creates a workflow using an explicitly supplied target class.
      *
-     * This overload is useful when the instance is accessed through
-     * a proxy, superclass, or another compatible runtime type.
-     *
-     * @param I Workflow input type.
-     * @param O Workflow output type.
-     * @param instance Workflow instance.
-     * @param targetClass Kotlin class used for metadata discovery.
-     * @return Executable workflow.
-     * @throws IllegalArgumentException If the instance is incompatible
-     * with the target class.
-     * @throws InvalidWorkflowException If workflow metadata is invalid.
+     * Useful when the instance is accessed through a proxy,
+     * superclass, or compatible runtime type.
      */
     fun <I, O> fromInstance(
         instance: Any,
         targetClass: KClass<*>
-    ): KiwiWorkflow<I, O> {
-        validateInstance(instance, targetClass)
-
-        val metadata = metadataCache.get(targetClass)
-
-        return create(
+    ): KiwiWorkflow<I, O> =
+        createWorkflow(
             instance = instance,
-            metadata = metadata
+            targetClass = targetClass
         )
-    }
 
     /**
-     * Creates a workflow using an explicit annotation and Kotlin class.
-     *
-     * This overload allows callers to override both the workflow
-     * annotation and the class used for metadata discovery.
-     *
-     * @param I Workflow input type.
-     * @param O Workflow output type.
-     * @param instance Workflow instance.
-     * @param annotation Workflow annotation.
-     * @param targetClass Kotlin class used for metadata discovery.
-     * @return Executable workflow.
-     * @throws IllegalArgumentException If the instance is incompatible
-     * with the target class.
-     * @throws InvalidWorkflowException If workflow metadata is invalid.
+     * Creates a workflow using an explicit annotation and target class.
      */
     fun <I, O> fromInstance(
         instance: Any,
         annotation: Workflow,
         targetClass: KClass<*>
-    ): KiwiWorkflow<I, O> {
-        validateInstance(instance, targetClass)
-
-        val metadata = metadataCache.get(
+    ): KiwiWorkflow<I, O> =
+        createWorkflow(
+            instance = instance,
             targetClass = targetClass,
             annotation = annotation
         )
 
-        return create(
+    /**
+     * Central workflow creation pipeline.
+     *
+     * All public factory methods delegate to this method.
+     */
+    private fun <I, O> createWorkflow(
+        instance: Any,
+        targetClass: KClass<*>,
+        annotation: Workflow? = null
+    ): KiwiWorkflow<I, O> {
+
+        validateInstance(
+            instance = instance,
+            targetClass = targetClass
+        )
+
+        val metadata = resolveMetadata(
+            targetClass = targetClass,
+            annotation = annotation
+        )
+
+        return compile(
             instance = instance,
             metadata = metadata
         )
     }
 
     /**
-     * Validates that the supplied instance is compatible with
-     * the class used for metadata discovery.
+     * Validates compatibility between the workflow instance
+     * and the class used for metadata discovery.
      */
     private fun validateInstance(
         instance: Any,
         targetClass: KClass<*>
     ) {
         require(targetClass.isInstance(instance)) {
-            "Instance of ${instance::class.qualifiedName} is not compatible with ${targetClass.qualifiedName}."
+            "Workflow instance '${instance::class.qualifiedName}' " +
+                    "is not compatible with target class " +
+                    "'${targetClass.qualifiedName}'."
         }
     }
 
     /**
-     * Converts workflow metadata into an executable workflow.
+     * Resolves workflow metadata.
      *
-     * @param I Workflow input type.
-     * @param O Workflow output type.
-     * @param instance Annotated workflow instance.
-     * @param metadata Discovered workflow metadata.
-     * @return Executable workflow.
+     * Default annotation discovery uses the metadata cache.
+     * Explicit annotation configurations bypass the cache.
      */
-    private fun <I, O> create(
+    private fun resolveMetadata(
+        targetClass: KClass<*>,
+        annotation: Workflow?
+    ): WorkflowMetadata =
+        if (annotation == null) {
+            metadataCache.get(targetClass)
+        } else {
+            metadataCache.get(
+                targetClass = targetClass,
+                annotation = annotation
+            )
+        }
+
+    /**
+     * Compiles resolved metadata into an executable workflow.
+     *
+     * The resulting workflow delegates execution lifecycle,
+     * tracking, timeout enforcement, and retry handling
+     * to the core workflow implementation.
+     */
+    private fun <I, O> compile(
         instance: Any,
         metadata: WorkflowMetadata
     ): KiwiWorkflow<I, O> {
@@ -206,12 +188,18 @@ object AnnotatedWorkflowFactory {
             var currentData: Any? = input
 
             for (stepMetadata in metadata.steps) {
+
                 val stepInput = currentData
 
                 currentData = step(stepMetadata.name) {
 
-                    stepMetadata.timeout?.let(::timeout)
-                    stepMetadata.retryPolicy?.let(::retry)
+                    stepMetadata.timeout?.let {
+                        timeout(it)
+                    }
+
+                    stepMetadata.retryPolicy?.let {
+                        retry(it)
+                    }
 
                     execute {
                         stepInvoker.invoke(

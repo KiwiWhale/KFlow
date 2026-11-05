@@ -1,36 +1,48 @@
 package io.github.kiwiwhale.kiwiflow.annotation
 
 /**
- * Declares a method as an executable step within a KiwiFlow workflow.
+ * Declares a function as an executable step in a KiwiFlow workflow.
  *
  * A step must be a public member function accepting zero or one
- * input parameter. The return value of each step is passed to
- * the next step as its input.
+ * value parameter.
  *
- * Steps are executed in ascending order based on [order].
- * Steps with the same order are sorted alphabetically by their
- * resolved names.
+ * Steps are executed sequentially. The result of each step is
+ * passed to the next step as its input.
  *
- * This annotation can also be used as a meta-annotation to define
- * reusable custom step annotations.
+ * A step returning [Unit] preserves the previous workflow data.
+ * A nullable return value of null is treated as an actual result.
+ *
+ * Steps are ordered by ascending [order]. Steps with the same
+ * order are sorted alphabetically by their resolved names.
+ *
+ * This annotation can be composed into custom annotations
+ * using [KiwiFlowAnnotation].
  *
  * Example:
  *
  * ```
- * @Step(
- *     name = "validate",
- *     order = 1,
- *     timeoutMillis = 5_000,
- *     retry = Retry(maxAttempts = 3)
- * )
- * fun validate(input: String): String = input
+ * @Workflow(name = "user-registration")
+ * class UserRegistrationWorkflow {
+ *
+ *     @Step(order = 1)
+ *     fun validate(input: String): String = input
+ *
+ *     @Step(
+ *         name = "register",
+ *         order = 2,
+ *         timeoutMillis = 5_000,
+ *         retry = Retry(maxAttempts = 3)
+ *     )
+ *     suspend fun register(input: String): String = input
+ * }
  * ```
  *
- * @property name The step name. When blank, the method name is used.
- * @property order The execution order of this step.
- * @property timeoutMillis The maximum execution duration in milliseconds.
- * A value of zero disables the timeout.
- * @property retry The retry configuration applied to this step.
+ * @property name Explicit step name. When blank, the function name
+ * is used.
+ * @property order Execution order of the step.
+ * @property timeoutMillis Maximum execution duration in milliseconds.
+ * Zero disables the timeout.
+ * @property retry Retry configuration applied to the step.
  *
  * @see Workflow
  * @see Retry

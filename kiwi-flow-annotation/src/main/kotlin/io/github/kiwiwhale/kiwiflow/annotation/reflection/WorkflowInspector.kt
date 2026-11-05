@@ -3,6 +3,7 @@ package io.github.kiwiwhale.kiwiflow.annotation.reflection
 import io.github.kiwiwhale.kiwiflow.annotation.Workflow
 import io.github.kiwiwhale.kiwiflow.annotation.exception.InvalidWorkflowException
 import io.github.kiwiwhale.kiwiflow.annotation.exception.KiwiFlowAnnotationException
+import io.github.kiwiwhale.kiwiflow.annotation.metadata.StepMetadata
 import io.github.kiwiwhale.kiwiflow.annotation.metadata.WorkflowMetadata
 import kotlin.reflect.KClass
 import kotlin.reflect.full.memberFunctions
@@ -10,79 +11,121 @@ import kotlin.reflect.full.memberFunctions
 /**
  * Discovers and validates annotated KiwiFlow workflows.
  *
- * Inspects workflow annotations, discovers their step methods,
- * validates step metadata, and produces an ordered workflow
- * metadata representation.
+ * Inherited member functions are included in discovery.
  *
- * Inherited member functions are included in discovery because
- * inspection uses Kotlin's [kotlin.reflect.full.memberFunctions].
+ * Execution order:
+ * 1. Ascending step order.
+ * 2. Alphabetical step name.
  */
 internal class WorkflowInspector(
     private val stepInspector: StepInspector = StepInspector()
 ) {
 
     /**
-     * Discovers workflow configuration from the specified class.
-     *
-     * The class must have a direct or composed [Workflow] annotation.
-     *
-     * @param kClass Class to inspect.
-     * @return Resolved workflow metadata.
-     * @throws InvalidWorkflowException If the workflow annotation
-     * is missing, ambiguous, or invalid.
+     * Inspects a class using its declared or composed Workflow annotation.
      */
     fun inspect(kClass: KClass<*>): WorkflowMetadata {
-        val annotation = try {
-            AnnotationResolver.find(
-                annotations = kClass.annotations.toTypedArray(),
-                target = Workflow::class
-            )
-        } catch (exception: IllegalArgumentException) {
-            throw InvalidWorkflowException(
-                kClass.simpleName ?: "Anonymous",
-                "Multiple @Workflow annotations were found.",
-                exception
-            )
-        } ?: throw InvalidWorkflowException(
-            kClass.simpleName ?: "Anonymous",
-            "Class must be annotated with @Workflow."
-        )
+        val annotation = resolveWorkflowAnnotation(kClass)
 
-        return inspect(kClass, annotation)
+        return inspect(
+            kClass = kClass,
+            annotation = annotation
+        )
     }
 
     /**
-     * Inspects a class using the supplied workflow configuration.
-     *
-     * Discovers all applicable step methods, validates their metadata,
-     * checks for duplicate step names, and sorts them by execution order.
-     *
-     * @param kClass Class containing workflow step methods.
-     * @param annotation Workflow configuration to apply.
-     * @return Resolved workflow metadata.
-     * @throws InvalidStepException If a discovered step is invalid.
-     * @throws InvalidWorkflowException If workflow validation fails.
+     * Inspects a class using an explicit Workflow configuration.
      */
     fun inspect(
         kClass: KClass<*>,
         annotation: Workflow
     ): WorkflowMetadata {
-        val workflowName = annotation.name.ifBlank {
-            kClass.simpleName ?: "AnonymousWorkflow"
-        }
+        val workflowName = resolveWorkflowName(
+            kClass = kClass,
+            annotation = annotation
+        )
 
-        val steps = try {
-            kClass.memberFunctions.mapNotNull(stepInspector::inspect)
+        val steps = discoverSteps(
+            kClass = kClass,
+            workflowName = workflowName
+        )
+
+        validateSteps(
+            workflowName = workflowName,
+            steps = steps
+        )
+
+        return WorkflowMetadata(
+            name = workflowName,
+            steps = steps.sortedWith(
+                compareBy(
+                    StepMetadata::order,
+                    StepMetadata::name
+                )
+            )
+        )
+    }
+
+    private fun resolveWorkflowAnnotation(
+        kClass: KClass<*>
+    ): Workflow =
+        try {
+            AnnotationResolver.find(
+                annotations = kClass.annotations.toTypedArray(),
+                target = Workflow::class
+            ) ?: throw InvalidWorkflowException(
+                workflowName = workflowNameOf(kClass),
+                message = "Class must be annotated with @Workflow."
+            )
         } catch (exception: KiwiFlowAnnotationException) {
             throw exception
         } catch (exception: Exception) {
             throw InvalidWorkflowException(
-                workflowName,
-                "Failed to inspect workflow steps.",
-                exception
+                workflowName = workflowNameOf(kClass),
+                message = "Failed to resolve workflow annotation.",
+                cause = exception
             )
         }
 
+    private fun resolveWorkflowName(
+        kClass: KClass<*>,
+        annotation: Workflow
+    ): String =
+        annotation.name.takeIf(String::isNotBlank)
+            ?: kClass.simpleName
+                ?.takeIf(String::isNotBlank)
+            ?: throw InvalidWorkflowException(
+                workflowName = "Anonymous",
+                message = "Workflow name could not be resolved."
+            )
+
+    private fun workflowNameOf(
+        kClass: KClass<*>
+    ): String =
+        kClass.simpleName ?: "Anonymous"
+
+    private fun discoverSteps(
+        kClass: KClass<*>,
+        workflowName: String
+    ): List<StepMetadata> =
+        try {
+            kClass.memberFunctions.mapNotNull(
+                stepInspector::inspect
+            )
+        } catch (exception: KiwiFlowAnnotationException) {
+            throw exception
+        } catch (exception: Exception) {
+            throw InvalidWorkflowException(
+                workflowName = workflowName,
+                message = "Failed to discover workflow steps.",
+                cause = exception
+            )
+        }
+
+    private fun validateSteps(
+        workflowName: String,
+        steps: List<StepMetadata>
+    ) {
         if (steps.isEmpty()) {
             throw InvalidWorkflowException(
                 workflowName,
@@ -91,7 +134,7 @@ internal class WorkflowInspector(
         }
 
         val duplicates = steps
-            .groupingBy { it.name }
+            .groupingBy(StepMetadata::name)
             .eachCount()
             .filterValues { it > 1 }
             .keys
@@ -103,15 +146,5 @@ internal class WorkflowInspector(
                 "Duplicate step names: ${duplicates.joinToString()}."
             )
         }
-
-        return WorkflowMetadata(
-            name = workflowName,
-            steps = steps.sortedWith(
-                compareBy(
-                    { it.order },
-                    { it.name }
-                )
-            )
-        )
     }
 }

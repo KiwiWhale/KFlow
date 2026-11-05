@@ -6,39 +6,26 @@ import io.github.kiwiwhale.kiwiflow.annotation.exception.KiwiFlowAnnotationExcep
 import io.github.kiwiwhale.kiwiflow.annotation.metadata.StepMetadata
 import io.github.kiwiwhale.kiwiflow.annotation.policy.AnnotationPolicyMapper
 import kotlin.reflect.KFunction
+import kotlin.reflect.KParameter
 import kotlin.time.Duration.Companion.milliseconds
 
 /**
- * Discovers and inspects workflow step functions.
+ * Discovers and resolves workflow step declarations.
  *
- * Resolves direct and composed [Step] annotations, validates
- * their declarations, and converts them into [StepMetadata].
+ * Direct and composed Step annotations are supported.
+ * Function declarations are validated before metadata creation.
  */
 internal class StepInspector {
 
     /**
-     * Inspects a function for a [Step] annotation.
-     *
-     * Returns null when the function is not a workflow step.
+     * Inspects a function for a workflow step declaration.
      *
      * @param function Function to inspect.
-     * @return Resolved step metadata, or null if no step annotation
-     * is present.
-     * @throws InvalidStepException If the step declaration is invalid.
+     * @return Step metadata, or null if no Step annotation exists.
      */
     fun inspect(function: KFunction<*>): StepMetadata? {
-        val annotation = try {
-            AnnotationResolver.find(
-                annotations = function.annotations.toTypedArray(),
-                target = Step::class
-            )
-        } catch (exception: IllegalArgumentException) {
-            throw InvalidStepException(
-                stepName = function.name,
-                message = "Multiple @Step annotations were found.",
-                cause = exception
-            )
-        } ?: return null
+        val annotation = resolveAnnotation(function)
+            ?: return null
 
         val name = annotation.name.ifBlank {
             function.name
@@ -50,16 +37,14 @@ internal class StepInspector {
                 annotation = annotation
             )
 
+            val inputParameter = function.parameters
+                .singleOrNull {
+                    it.kind == KParameter.Kind.VALUE
+                }
+
             val timeout = annotation.timeoutMillis
                 .takeIf { it > 0L }
                 ?.milliseconds
-
-            if (timeout != null && !timeout.isFinite()) {
-                throw InvalidStepException(
-                    name,
-                    "timeoutMillis exceeds the supported duration range."
-                )
-            }
 
             return StepMetadata(
                 function = function,
@@ -69,12 +54,10 @@ internal class StepInspector {
                 retryPolicy = AnnotationPolicyMapper.toRetryPolicy(
                     annotation.retry
                 ),
-                inputParameter = function.parameters.getOrNull(1)
+                inputParameter = inputParameter
             )
-
         } catch (exception: KiwiFlowAnnotationException) {
             throw exception
-
         } catch (exception: Exception) {
             throw InvalidStepException(
                 stepName = name,
@@ -83,4 +66,20 @@ internal class StepInspector {
             )
         }
     }
+
+    private fun resolveAnnotation(
+        function: KFunction<*>
+    ): Step? =
+        try {
+            AnnotationResolver.find(
+                annotations = function.annotations.toTypedArray(),
+                target = Step::class
+            )
+        } catch (exception: IllegalArgumentException) {
+            throw InvalidStepException(
+                stepName = function.name,
+                message = "Multiple @Step annotations were found.",
+                cause = exception
+            )
+        }
 }

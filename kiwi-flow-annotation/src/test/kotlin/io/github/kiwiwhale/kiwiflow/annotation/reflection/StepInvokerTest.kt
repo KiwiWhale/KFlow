@@ -20,17 +20,19 @@ class StepInvokerTest {
         fun noInput(): String = "완료"
 
         @Step
-        fun withInput(input: String): String = "$input 처리"
+        fun withInput(input: String): String =
+            "$input 처리"
 
         @Step
         fun nullableInput(input: String?): String =
             input ?: "기본값"
 
         @Step
-        fun suspendNoInput(): String = "비동기 완료"
+        suspend fun suspendNoInput(): String =
+            "비동기 완료"
 
         @Step
-        fun suspendWithInput(input: String): String =
+        suspend fun suspendWithInput(input: String): String =
             "$input 비동기 처리"
 
         @Step
@@ -52,93 +54,114 @@ class StepInvokerTest {
     }
 
     @Test
-    fun `입력 인자가 없는 일반 함수를 실행한다`() = runBlocking {
-        val instance = SampleSteps()
-
+    fun `입력이 없는 일반 함수를 실행한다`() = runBlocking {
         val result = invoker.invoke(
-            metadata = metadata("noInput"),
-            instance = instance,
-            input = null
+            metadata("noInput"),
+            SampleSteps(),
+            null
         )
 
         assertEquals("완료", result)
     }
 
     @Test
-    fun `입력 인자가 있는 일반 함수를 실행한다`() = runBlocking {
-        val instance = SampleSteps()
-
+    fun `입력이 있는 일반 함수를 실행한다`() = runBlocking {
         val result = invoker.invoke(
-            metadata = metadata("withInput"),
-            instance = instance,
-            input = "데이터"
+            metadata("withInput"),
+            SampleSteps(),
+            "데이터"
         )
 
         assertEquals("데이터 처리", result)
     }
 
     @Test
-    fun `null 입력을 전달할 수 있다`() = runBlocking {
-        val instance = SampleSteps()
-
+    fun `nullable 입력에 null을 전달한다`() = runBlocking {
         val result = invoker.invoke(
-            metadata = metadata("nullableInput"),
-            instance = instance,
-            input = null
+            metadata("nullableInput"),
+            SampleSteps(),
+            null
         )
 
         assertEquals("기본값", result)
     }
 
     @Test
-    fun `입력 인자가 없는 suspend 함수를 실행한다`() = runBlocking {
-        val instance = SampleSteps()
-
+    fun `suspend 함수에 입력 없이 호출한다`() = runBlocking {
         val result = invoker.invoke(
-            metadata = metadata("suspendNoInput"),
-            instance = instance,
-            input = null
+            metadata("suspendNoInput"),
+            SampleSteps(),
+            null
         )
 
         assertEquals("비동기 완료", result)
     }
 
     @Test
-    fun `입력 인자가 있는 suspend 함수를 실행한다`() = runBlocking {
-        val instance = SampleSteps()
-
+    fun `suspend 함수에 입력을 전달한다`() = runBlocking {
         val result = invoker.invoke(
-            metadata = metadata("suspendWithInput"),
-            instance = instance,
-            input = "데이터"
+            metadata("suspendWithInput"),
+            SampleSteps(),
+            "데이터"
         )
 
         assertEquals("데이터 비동기 처리", result)
     }
 
     @Test
-    fun `반환값이 null인 함수도 정상적으로 실행한다`() = runBlocking {
-        val instance = SampleSteps()
-
+    fun `반환값이 null인 함수를 실행한다`() = runBlocking {
         val result = invoker.invoke(
-            metadata = metadata("returnNull"),
-            instance = instance,
-            input = null
+            metadata("returnNull"),
+            SampleSteps(),
+            null
         )
 
         assertNull(result)
     }
 
     @Test
-    fun `실행 중 발생한 예외를 호출자에게 전달한다`() = runBlocking {
-        val instance = SampleSteps()
-
-        assertFailsWith<IllegalStateException> {
+    fun `잘못된 입력 타입을 거부한다`() = runBlocking {
+        assertFailsWith<IllegalArgumentException> {
             invoker.invoke(
-                metadata = metadata("throwException"),
-                instance = instance,
-                input = null
+                metadata("withInput"),
+                SampleSteps(),
+                123
             )
         }
     }
+
+    @Test
+    fun `null을 허용하지 않는 입력에 null을 전달하면 거부한다`() =
+        runBlocking {
+            assertFailsWith<IllegalArgumentException> {
+                invoker.invoke(
+                    metadata("withInput"),
+                    SampleSteps(),
+                    null
+                )
+            }
+        }
+
+    @Test
+    fun `잘못된 호출 인스턴스를 거부한다`() = runBlocking {
+        assertFailsWith<IllegalArgumentException> {
+            invoker.invoke(
+                metadata("withInput"),
+                Any(),
+                "데이터"
+            )
+        }
+    }
+
+    @Test
+    fun `실행 중 발생한 예외를 호출자에게 전달한다`() =
+        runBlocking {
+            assertFailsWith<IllegalStateException> {
+                invoker.invoke(
+                    metadata("throwException"),
+                    SampleSteps(),
+                    null
+                )
+            }
+        }
 }

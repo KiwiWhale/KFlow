@@ -1,24 +1,26 @@
 package io.github.kiwiwhale.kiwiflow.annotation.reflection
 
+import io.github.kiwiwhale.kiwiflow.annotation.KiwiFlowAnnotation
 import kotlin.reflect.KClass
 
 /**
- * Resolves annotations declared directly or indirectly through
- * meta-annotation composition.
+ * Resolves KiwiFlow annotations from direct and composed annotations.
  *
- * This resolver is used to support custom annotations built on
- * top of KiwiFlow annotations.
+ * Direct annotations are always considered.
+ * Composed annotations are traversed only when their annotation
+ * type is marked with [KiwiFlowAnnotation].
+ *
+ * Circular references and repeated annotation types within
+ * a traversal path are safely ignored.
  */
 internal object AnnotationResolver {
 
     /**
-     * Finds an annotation of the specified type.
+     * Finds an annotation of the requested type.
      *
-     * Searches direct annotations and their eligible meta-annotations.
-     *
-     * @param annotations Annotations to inspect.
+     * @param annotations Annotations declared on the inspected element.
      * @param target Annotation type to resolve.
-     * @return The resolved annotation, or null if none is found.
+     * @return The resolved annotation, or null if none exists.
      * @throws IllegalArgumentException If multiple matching annotations
      * are discovered.
      */
@@ -39,9 +41,12 @@ internal object AnnotationResolver {
 
         return when (candidates.size) {
             0 -> null
+
             1 -> candidates.single()
+
             else -> throw IllegalArgumentException(
-                "Multiple @${target.simpleName} annotations were found."
+                "Multiple @${target.simpleName ?: target.qualifiedName} " +
+                        "annotations were found."
             )
         }
     }
@@ -63,10 +68,6 @@ internal object AnnotationResolver {
             return
         }
 
-//        if (annotationType.getAnnotation(KiwiFlowAnnotation::class.java) == null) {
-//            return
-//        }
-
         annotationType.declaredAnnotations
             .asSequence()
             .filterNot(::isInfrastructureAnnotation)
@@ -80,8 +81,14 @@ internal object AnnotationResolver {
             }
     }
 
-    private fun isInfrastructureAnnotation(annotation: Annotation): Boolean {
-        val packageName = annotation.annotationClass.java.packageName
+    /**
+     * Excludes JVM and Kotlin infrastructure annotations.
+     */
+    private fun isInfrastructureAnnotation(
+        annotation: Annotation
+    ): Boolean {
+        val packageName =
+            annotation.annotationClass.java.packageName
 
         return packageName == "java.lang.annotation" ||
                 packageName.startsWith("kotlin.")

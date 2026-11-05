@@ -1,13 +1,14 @@
 package io.github.kiwiwhale.kiwiflow.annotation
 
 /**
- * Marks an annotation as a KiwiFlow-related annotation.
+ * Marks a custom annotation as part of the KiwiFlow annotation model.
  *
- * This annotation allows custom annotations to participate in
- * KiwiFlow meta-annotation resolution.
+ * This marker enables recursive meta-annotation resolution for
+ * custom annotations that compose KiwiFlow annotations.
  *
- * Apply this annotation to custom annotations that compose
- * [Workflow], [Step], or other KiwiFlow annotations.
+ * Apply this annotation to custom annotations that directly or
+ * indirectly reference [Workflow], [Step], or other KiwiFlow
+ * configuration annotations.
  *
  * Example:
  *
@@ -18,6 +19,10 @@ package io.github.kiwiwhale.kiwiflow.annotation
  * @Step(name = "validate")
  * annotation class ValidateStep
  * ```
+ *
+ * @see Workflow
+ * @see Step
+ * @see Retry
  */
 @Target(AnnotationTarget.ANNOTATION_CLASS)
 @Retention(AnnotationRetention.RUNTIME)

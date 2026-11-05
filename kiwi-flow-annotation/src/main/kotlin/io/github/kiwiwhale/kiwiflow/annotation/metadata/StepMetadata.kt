@@ -3,30 +3,13 @@ package io.github.kiwiwhale.kiwiflow.annotation.metadata
 import io.github.kiwiwhale.kiwiflow.core.policy.RetryPolicy
 import kotlin.reflect.KFunction
 import kotlin.reflect.KParameter
+import kotlin.reflect.full.valueParameters
 import kotlin.time.Duration
 
 /**
- * Represents the resolved metadata of an annotated workflow step.
- *
- * Stores the reflected Kotlin function and its execution configuration.
- * This metadata is created during workflow inspection and consumed
- * by the workflow factory and step invoker.
- *
- * A step can accept either no input parameter or exactly one input
- * parameter.
- *
- * @property function Reflected Kotlin function representing the step.
- * @property name Resolved step name.
- * @property order Execution order used when sorting workflow steps.
- * @property timeout Maximum execution duration, or null if disabled.
- * @property retryPolicy Retry configuration, or null if retries are disabled.
- * @property inputParameter The step input parameter, or null if the
- * step does not accept an input.
- *
- * @see StepInvoker
- * @see WorkflowMetadata
+ * Immutable metadata describing an annotated workflow step.
  */
-internal data class StepMetadata(
+internal class StepMetadata(
     val function: KFunction<*>,
     val name: String,
     val order: Int,
@@ -40,15 +23,17 @@ internal data class StepMetadata(
             "Step name cannot be blank."
         }
 
-        require(timeout == null || (timeout.isFinite() && timeout.isPositive())) {
-            "Step timeout must be finite and positive."
+        val actualInput = function.valueParameters.singleOrNull()
+
+        require(inputParameter == actualInput) {
+            "Step input metadata does not match its function."
         }
 
         require(
-            inputParameter == null ||
-                    inputParameter.kind == KParameter.Kind.VALUE
+            timeout == null ||
+                    (timeout.isFinite() && timeout.isPositive())
         ) {
-            "Step input parameter must be a value parameter."
+            "Step timeout must be finite and positive."
         }
     }
 }

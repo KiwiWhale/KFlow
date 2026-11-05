@@ -3,15 +3,17 @@ package io.github.kiwiwhale.kiwiflow.annotation
 import io.github.kiwiwhale.kiwiflow.core.policy.RetryJitter
 
 /**
- * Configures the retry policy for a KiwiFlow step.
+ * Defines retry configuration for a KiwiFlow step.
  *
- * Failed step executions may be retried according to the configured
- * exponential backoff strategy.
+ * Configures the retry behavior applied when a step execution fails.
  *
- * When [maxAttempts] is one, retries are disabled.
+ * Retry delays follow an exponential backoff strategy, optionally
+ * applying a jitter strategy to reduce synchronized retries.
  *
- * This annotation can be used directly through [Step] or as a
- * meta-annotation on custom retry configurations.
+ * A maximum attempt count of one disables retries.
+ *
+ * This annotation is intended for use as part of [Step]
+ * configuration.
  *
  * Example:
  *
@@ -36,6 +38,7 @@ import io.github.kiwiwhale.kiwiflow.core.policy.RetryJitter
  * @property jitter Jitter strategy applied to retry delays.
  *
  * @see Step
+ * @see RetryJitter
  */
 @Target(AnnotationTarget.ANNOTATION_CLASS)
 @Retention(AnnotationRetention.RUNTIME)

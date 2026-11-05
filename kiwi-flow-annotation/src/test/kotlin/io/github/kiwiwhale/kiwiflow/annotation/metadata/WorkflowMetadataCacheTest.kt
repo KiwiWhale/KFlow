@@ -3,79 +3,155 @@ package io.github.kiwiwhale.kiwiflow.annotation.metadata
 import io.github.kiwiwhale.kiwiflow.annotation.Step
 import io.github.kiwiwhale.kiwiflow.annotation.Workflow
 import io.github.kiwiwhale.kiwiflow.annotation.reflection.WorkflowInspector
+import java.util.concurrent.Executors
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNotSame
 import kotlin.test.assertSame
 
 class WorkflowMetadataCacheTest {
 
-    @Workflow
-    class SampleWorkflow {
+    @Workflow(name = "default")
+    class TestWorkflow {
 
         @Step
-        fun first() {}
-
-        @Step
-        fun second() {}
+        fun execute(input: String): String = input
     }
 
-    @Workflow
-    class AnotherWorkflow {
-
-        @Step
-        fun execute() {}
-    }
-
-    private val cache = WorkflowMetadataCache(
-        inspector = WorkflowInspector()
-    )
+    private fun createCache() =
+        WorkflowMetadataCache(WorkflowInspector())
 
     @Test
-    fun `동일한 클래스의 메타데이터는 캐싱된다`() {
-        val first = cache.get(SampleWorkflow::class)
-        val second = cache.get(SampleWorkflow::class)
+    fun `기본 메타데이터를 캐싱한다`() {
+        val cache = createCache()
+
+        val first = cache.get(TestWorkflow::class)
+        val second = cache.get(TestWorkflow::class)
 
         assertSame(first, second)
+        assertEquals(1, cache.size)
     }
 
     @Test
-    fun `서로 다른 클래스는 별도의 메타데이터를 생성한다`() {
-        val first = cache.get(SampleWorkflow::class)
-        val second = cache.get(AnotherWorkflow::class)
+    fun `명시적 설정을 별도로 캐싱한다`() {
+        val cache = createCache()
+
+        val first = cache.get(
+            TestWorkflow::class,
+            Workflow(name = "explicit")
+        )
+
+        val second = cache.get(
+            TestWorkflow::class,
+            Workflow(name = "explicit")
+        )
+
+        assertSame(first, second)
+        assertEquals("explicit", first.name)
+        assertEquals(1, cache.size)
+    }
+
+    @Test
+    fun `기본 설정과 명시적 설정은 분리된다`() {
+        val cache = createCache()
+
+        val default = cache.get(TestWorkflow::class)
+
+        val explicit = cache.get(
+            TestWorkflow::class,
+            Workflow(name = "explicit")
+        )
+
+        assertNotSame(default, explicit)
+        assertEquals("default", default.name)
+        assertEquals("explicit", explicit.name)
+        assertEquals(2, cache.size)
+    }
+
+    @Test
+    fun `서로 다른 명시적 설정은 별도로 캐싱한다`() {
+        val cache = createCache()
+
+        val first = cache.get(
+            TestWorkflow::class,
+            Workflow(name = "first")
+        )
+
+        val second = cache.get(
+            TestWorkflow::class,
+            Workflow(name = "second")
+        )
 
         assertNotSame(first, second)
+        assertEquals(2, cache.size)
     }
 
     @Test
-    fun `캐싱된 메타데이터의 워크플로우 이름을 유지한다`() {
-        val metadata = cache.get(SampleWorkflow::class)
+    fun `evict는 해당 클래스의 캐시만 제거한다`() {
+        val cache = createCache()
 
-        assertEquals("SampleWorkflow", metadata.name)
-    }
-
-    @Test
-    fun `캐싱된 메타데이터의 단계 목록을 유지한다`() {
-        val metadata = cache.get(SampleWorkflow::class)
-
-        assertEquals(2, metadata.steps.size)
-        assertEquals(
-            listOf("first", "second"),
-            metadata.steps.map { it.name }
+        cache.get(TestWorkflow::class)
+        cache.get(
+            TestWorkflow::class,
+            Workflow(name = "explicit")
         )
+
+        cache.evict(TestWorkflow::class)
+
+        assertEquals(0, cache.size)
     }
 
     @Test
-    fun `여러 번 조회해도 단계 정보가 변경되지 않는다`() {
-        val first = cache.get(SampleWorkflow::class)
+    fun `clear는 모든 캐시를 제거한다`() {
+        val cache = createCache()
 
-        repeat(5) {
-            cache.get(SampleWorkflow::class)
+        cache.get(TestWorkflow::class)
+        cache.get(
+            TestWorkflow::class,
+            Workflow(name = "explicit")
+        )
+
+        cache.clear()
+
+        assertEquals(0, cache.size)
+    }
+
+    @Test
+    fun `메타데이터 검사 실패 결과는 캐싱되지 않는다`() {
+        class InvalidWorkflow
+
+        val cache = createCache()
+
+        assertFailsWith<Exception> {
+            cache.get(InvalidWorkflow::class)
         }
 
-        val last = cache.get(SampleWorkflow::class)
+        assertEquals(0, cache.size)
+    }
 
-        assertSame(first, last)
-        assertEquals(2, last.steps.size)
+    @Test
+    fun `동시 조회에서도 동일한 메타데이터를 반환한다`() {
+        val cache = createCache()
+
+        val executor = Executors.newFixedThreadPool(8)
+
+        try {
+            val results = (1..32).map {
+                executor.submit<WorkflowMetadata> {
+                    cache.get(TestWorkflow::class)
+                }
+            }.map { it.get() }
+
+            val first = results.first()
+
+            results.forEach {
+                assertSame(first, it)
+            }
+
+            assertEquals(1, cache.size)
+        } finally {
+            executor.shutdownNow()
+        }
     }
 }

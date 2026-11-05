@@ -1,17 +1,20 @@
 package io.github.kiwiwhale.kiwiflow.annotation.exception
 
+import io.github.kiwiwhale.kiwiflow.annotation.Step
+
 /**
- * Thrown when a step declaration is invalid.
+ * Thrown when a workflow step declaration is invalid.
  *
- * This exception is raised when a method annotated with [Step]
- * violates the supported step declaration rules or when its
- * metadata cannot be inspected successfully.
+ * This exception is raised when a function annotated with [Step]
+ * violates the supported declaration rules or when its metadata
+ * cannot be resolved successfully.
  *
- * @property stepName Name of the invalid step.
+ * @property stepName Resolved name of the invalid step.
  * @param message Description of the validation failure.
- * @param cause The underlying cause of the failure, if available.
+ * @param cause Underlying cause of the failure, if available.
  *
  * @see Step
+ * @see InvalidWorkflowException
  */
 class InvalidStepException(
     val stepName: String,

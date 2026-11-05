@@ -2,35 +2,25 @@ package io.github.kiwiwhale.kiwiflow.annotation.reflection
 
 import io.github.kiwiwhale.kiwiflow.annotation.Step
 import io.github.kiwiwhale.kiwiflow.annotation.exception.InvalidStepException
+import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 import kotlin.reflect.KParameter
 import kotlin.reflect.KVisibility
 import kotlin.time.Duration.Companion.milliseconds
 
 /**
- * Validates reflected step functions and their annotation configuration.
+ * Validates Kotlin function declarations used as workflow steps.
  *
- * Ensures that step declarations satisfy the restrictions required
- * by the annotation-based workflow execution model.
+ * Supported functions:
+ * - Public instance member functions.
+ * - Regular and suspend functions.
+ * - Zero or one non-optional value parameter.
+ * - Non-generic functions with resolvable runtime types.
+ *
+ * Unsupported declarations are rejected before invocation.
  */
 internal object ReflectionValidator {
 
-    /**
-     * Validates a step function and its [Step] configuration.
-     *
-     * Supported functions must:
-     * - Have public visibility.
-     * - Be member functions.
-     * - Accept zero or one input parameter.
-     * - Not declare default parameters.
-     * - Not declare vararg parameters.
-     * - Have valid timeout and retry configurations.
-     *
-     * @param function Reflected function to validate.
-     * @param annotation Step configuration.
-     * @throws InvalidStepException If the function declaration
-     * or its configuration is invalid.
-     */
     fun validateStep(
         function: KFunction<*>,
         annotation: Step
@@ -39,25 +29,73 @@ internal object ReflectionValidator {
             function.name
         }
 
-        fun invalid(message: String): Nothing {
+        fun invalid(message: String): Nothing =
             throw InvalidStepException(name, message)
-        }
 
+        validateVisibility(function, ::invalid)
+        validateReceiver(function, ::invalid)
+        validateParameters(function, ::invalid)
+        validateFunctionType(function, ::invalid)
+        validateTimeout(annotation.timeoutMillis, ::invalid)
+        validateRetry(annotation, ::invalid)
+    }
+
+    private fun validateVisibility(
+        function: KFunction<*>,
+        invalid: (String) -> Nothing
+    ) {
         if (function.visibility != KVisibility.PUBLIC) {
             invalid("Step method must be public.")
         }
 
+        if (function.isAbstract) {
+            invalid("Abstract step methods are not supported.")
+        }
+    }
+
+    private fun validateReceiver(
+        function: KFunction<*>,
+        invalid: (String) -> Nothing
+    ) {
         val parameters = function.parameters
 
         if (
-            parameters.firstOrNull()?.kind != KParameter.Kind.INSTANCE ||
-            parameters.size !in 1..2 ||
-            parameters.drop(1).any {
-                it.kind != KParameter.Kind.VALUE
+            parameters.firstOrNull()?.kind !=
+            KParameter.Kind.INSTANCE
+        ) {
+            invalid("Step must be an instance member function.")
+        }
+
+        if (
+            parameters.any {
+                it.kind == KParameter.Kind.EXTENSION_RECEIVER
             }
         ) {
+            invalid("Extension receiver functions are not supported.")
+        }
+
+        val instanceCount = parameters.count {
+            it.kind == KParameter.Kind.INSTANCE
+        }
+
+        if (instanceCount != 1) {
+            invalid("Step must declare exactly one instance receiver.")
+        }
+    }
+
+    private fun validateParameters(
+        function: KFunction<*>,
+        invalid: (String) -> Nothing
+    ) {
+        val parameters = function.parameters
+
+        val valueParameters = parameters.filter {
+            it.kind == KParameter.Kind.VALUE
+        }
+
+        if (valueParameters.size > 1) {
             invalid(
-                "Step must be a member function with zero or one input parameter."
+                "Step cannot declare more than one input parameter."
             )
         }
 
@@ -69,36 +107,115 @@ internal object ReflectionValidator {
             invalid("Vararg parameters are not supported.")
         }
 
-        if (annotation.timeoutMillis < 0L) {
+        if (
+            parameters.any {
+                it.kind != KParameter.Kind.INSTANCE &&
+                        it.kind != KParameter.Kind.VALUE
+            }
+        ) {
+            invalid("Unsupported function parameter kind.")
+        }
+    }
+
+    private fun validateFunctionType(
+        function: KFunction<*>,
+        invalid: (String) -> Nothing
+    ) {
+        if (function.typeParameters.isNotEmpty()) {
+            invalid("Generic step functions are not supported.")
+        }
+
+        val valueParameters = function.parameters.filter {
+            it.kind == KParameter.Kind.VALUE
+        }
+
+        valueParameters.forEach { parameter ->
+            if (parameter.type.classifier !is KClass<*>) {
+                invalid(
+                    "Step parameter '${parameter.name}' " +
+                            "must have a resolvable runtime type."
+                )
+            }
+
+            if (parameter.type.isMarkedNullable.not() &&
+                parameter.type.classifier == Nothing::class
+            ) {
+                invalid(
+                    "Nothing is not a supported step input type."
+                )
+            }
+        }
+
+        val instanceParameter = function.parameters.first()
+
+        if (instanceParameter.type.classifier !is KClass<*>) {
+            invalid("Step instance receiver type cannot be resolved.")
+        }
+    }
+
+    private fun validateTimeout(
+        timeoutMillis: Long,
+        invalid: (String) -> Nothing
+    ) {
+        if (timeoutMillis < 0L) {
             invalid("timeoutMillis cannot be negative.")
         }
 
+        if (
+            timeoutMillis > 0L &&
+            !timeoutMillis.milliseconds.isFinite()
+        ) {
+            invalid(
+                "timeoutMillis exceeds the supported duration range."
+            )
+        }
+    }
+
+    private fun validateRetry(
+        annotation: Step,
+        invalid: (String) -> Nothing
+    ) {
         val retry = annotation.retry
 
-        val initialDelay = retry.initialDelayMillis.milliseconds
-        val maxDelay = retry.maxDelayMillis.milliseconds
-
-        if (!initialDelay.isFinite() || !maxDelay.isFinite()) {
-            invalid("Retry delay exceeds the supported duration range.")
-        }
-
         if (retry.maxAttempts < 1) {
-            invalid("maxAttempts must be at least 1.")
+            invalid("retry.maxAttempts must be at least 1.")
         }
 
         if (retry.initialDelayMillis < 0L) {
-            invalid("initialDelayMillis cannot be negative.")
+            invalid(
+                "retry.initialDelayMillis cannot be negative."
+            )
         }
 
         if (retry.maxDelayMillis < retry.initialDelayMillis) {
             invalid(
-                "maxDelayMillis must be greater than or equal to initialDelayMillis."
+                "retry.maxDelayMillis must be greater than or equal to " +
+                        "retry.initialDelayMillis."
             )
         }
 
-        if (!retry.multiplier.isFinite() || retry.multiplier < 1.0) {
+        if (
+            !retry.multiplier.isFinite() ||
+            retry.multiplier < 1.0
+        ) {
             invalid(
-                "multiplier must be finite and greater than or equal to 1.0."
+                "retry.multiplier must be finite and " +
+                        "greater than or equal to 1.0."
+            )
+        }
+
+        val initialDelay =
+            retry.initialDelayMillis.milliseconds
+
+        val maxDelay =
+            retry.maxDelayMillis.milliseconds
+
+        if (
+            !initialDelay.isFinite() ||
+            !maxDelay.isFinite()
+        ) {
+            invalid(
+                "Retry delay exceeds the supported duration range."
             )
         }
     }

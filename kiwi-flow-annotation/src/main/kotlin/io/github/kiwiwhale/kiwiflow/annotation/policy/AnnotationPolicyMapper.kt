@@ -5,22 +5,23 @@ import io.github.kiwiwhale.kiwiflow.core.policy.RetryPolicy
 import kotlin.time.Duration.Companion.milliseconds
 
 /**
- * Converts annotation-based retry configuration into core retry policies.
+ * Maps annotation-based retry configuration to Core retry policies.
  *
- * Keeps annotation processing independent from the core retry policy
- * implementation.
+ * Keeps annotation processing independent of retry policy
+ * construction details.
  */
 internal object AnnotationPolicyMapper {
 
     /**
      * Converts a [Retry] annotation into a [RetryPolicy].
      *
-     * Returns null when retries are disabled.
-     *
      * @param annotation Retry configuration.
-     * @return Corresponding retry policy, or null when maxAttempts is one.
+     * @return Corresponding retry policy, or null when retries
+     * are disabled.
      */
-    fun toRetryPolicy(annotation: Retry): RetryPolicy? {
+    fun toRetryPolicy(
+        annotation: Retry
+    ): RetryPolicy? {
         if (annotation.maxAttempts == 1) {
             return null
         }

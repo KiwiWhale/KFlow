@@ -16,6 +16,12 @@ class ReflectionValidatorTest {
 
         @Step
         fun withInput(input: String): String = input
+
+        @Step
+        suspend fun suspendStep(input: String): String = input
+
+        @Step
+        fun nullableInput(input: String?): String = input ?: ""
     }
 
     class InvalidSteps {
@@ -28,6 +34,15 @@ class ReflectionValidatorTest {
 
         @Step
         fun withVararg(vararg input: String) {}
+
+        @Step
+        fun withMultipleInputs(
+            first: String,
+            second: String
+        ) {}
+
+        @Step
+        fun <T> generic(input: T) {}
 
         @Step(timeoutMillis = -1)
         fun negativeTimeout() {}
@@ -53,14 +68,23 @@ class ReflectionValidatorTest {
         fun nanMultiplier() {}
     }
 
+    class ExtensionSteps {
+
+        @Step
+        fun String.extensionStep() {}
+    }
+
     private fun validate(
         functionName: String,
-        annotation: Step
+        annotation: Step = Step()
     ) {
         val function = InvalidSteps::class.memberFunctions
             .first { it.name == functionName }
 
-        ReflectionValidator.validateStep(function, annotation)
+        ReflectionValidator.validateStep(
+            function,
+            annotation
+        )
     }
 
     @Test
@@ -70,7 +94,7 @@ class ReflectionValidatorTest {
 
         ReflectionValidator.validateStep(
             function,
-            function.annotations.filterIsInstance<Step>().first()
+            Step()
         )
     }
 
@@ -81,40 +105,79 @@ class ReflectionValidatorTest {
 
         ReflectionValidator.validateStep(
             function,
-            function.annotations.filterIsInstance<Step>().first()
+            Step()
         )
     }
 
     @Test
-    fun `private 함수는 거부한다`() {
+    fun `suspend 함수를 허용한다`() {
+        val function = ValidSteps::class.memberFunctions
+            .first { it.name == "suspendStep" }
+
+        ReflectionValidator.validateStep(
+            function,
+            Step()
+        )
+    }
+
+    @Test
+    fun `nullable 입력을 허용한다`() {
+        val function = ValidSteps::class.memberFunctions
+            .first { it.name == "nullableInput" }
+
+        ReflectionValidator.validateStep(
+            function,
+            Step()
+        )
+    }
+
+    @Test
+    fun `private 함수를 거부한다`() {
         assertFailsWith<InvalidStepException> {
-            validate("privateFunction", Step())
+            validate("privateFunction")
         }
     }
 
     @Test
-    fun `기본 매개변수는 거부한다`() {
+    fun `기본 매개변수를 거부한다`() {
         assertFailsWith<InvalidStepException> {
-            validate("withDefault", Step())
+            validate("withDefault")
         }
     }
 
     @Test
-    fun `vararg 매개변수는 거부한다`() {
+    fun `vararg 매개변수를 거부한다`() {
         assertFailsWith<InvalidStepException> {
-            validate("withVararg", Step())
+            validate("withVararg")
         }
     }
 
     @Test
-    fun `음수 timeout은 거부한다`() {
+    fun `두 개 이상의 입력 매개변수를 거부한다`() {
         assertFailsWith<InvalidStepException> {
-            validate("negativeTimeout", Step(timeoutMillis = -1))
+            validate("withMultipleInputs")
         }
     }
 
     @Test
-    fun `최대 재시도 횟수는 1 이상이어야 한다`() {
+    fun `Generic 함수를 거부한다`() {
+        assertFailsWith<InvalidStepException> {
+            validate("generic")
+        }
+    }
+
+    @Test
+    fun `음수 timeout을 거부한다`() {
+        assertFailsWith<InvalidStepException> {
+            validate(
+                "negativeTimeout",
+                Step(timeoutMillis = -1)
+            )
+        }
+    }
+
+    @Test
+    fun `최대 재시도 횟수가 1 미만이면 거부한다`() {
         assertFailsWith<InvalidStepException> {
             validate(
                 "invalidAttempts",
@@ -124,7 +187,7 @@ class ReflectionValidatorTest {
     }
 
     @Test
-    fun `초기 재시도 지연은 음수일 수 없다`() {
+    fun `음수 초기 재시도 지연을 거부한다`() {
         assertFailsWith<InvalidStepException> {
             validate(
                 "negativeInitialDelay",
@@ -134,7 +197,7 @@ class ReflectionValidatorTest {
     }
 
     @Test
-    fun `최대 지연은 초기 지연보다 작을 수 없다`() {
+    fun `초기 지연보다 작은 최대 지연을 거부한다`() {
         assertFailsWith<InvalidStepException> {
             validate(
                 "invalidMaxDelay",
@@ -149,7 +212,7 @@ class ReflectionValidatorTest {
     }
 
     @Test
-    fun `재시도 배수는 1 이상이어야 한다`() {
+    fun `1보다 작은 재시도 배수를 거부한다`() {
         assertFailsWith<InvalidStepException> {
             validate(
                 "invalidMultiplier",
@@ -159,7 +222,7 @@ class ReflectionValidatorTest {
     }
 
     @Test
-    fun `NaN 재시도 배수는 거부한다`() {
+    fun `NaN 재시도 배수를 거부한다`() {
         assertFailsWith<InvalidStepException> {
             validate(
                 "nanMultiplier",
