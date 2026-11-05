@@ -8,6 +8,7 @@ ktor = "3.6.1"
 logback = "1.6.6"
 
 dokka = "2.2.0"
+doenv = "4.0.0"
 
 kiwi-registry = "1.2.2-SNAPSHOT"
 
@@ -31,3 +32,4 @@ kiwi-registry = { module = "io.github.kiwiwhale:kiwi-registry", version.ref = "k
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
+doenv = { id = "co.uzzu.dotenv.gradle", version.ref = "doenv"}

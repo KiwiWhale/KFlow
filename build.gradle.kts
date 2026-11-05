@@ -4,11 +4,11 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 plugins {
     alias(libs.plugins.kotlin.jvm) apply false
     alias(libs.plugins.dokka)
-    id("co.uzzu.dotenv.gradle") version "4.0.0"
+    alias(libs.plugins.doenv)
 }
 
 group = "io.github.kiwiwhale.kiwiflow"
-version = "1.3.0"
+version = "1.3.1"
 
 val mavenUsername = if (env.isPresent("MAVEN_USERNAME")) env.fetch("MAVEN_USERNAME") else ""
 val mavenPassword = if (env.isPresent("MAVEN_PASSWORD")) env.fetch("MAVEN_PASSWORD") else ""

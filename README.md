@@ -40,7 +40,7 @@ repositories {
 }
 
 dependencies {
-    implementation("io.github.kiwiwhale:kiwi-flow-MODULE:1.3.0")
+    implementation("io.github.kiwiwhale:kiwi-flow-MODULE:1.3.1")
 }
 ```
 
