@@ -52,28 +52,24 @@ class KiwiFlowConfig {
     }
 
     /**
-     * Registers multiple workflows with atomic rollback on failure.
+     * Registers multiple workflows atomically.
      */
-    fun workflows(
-        workflows: Collection<KiwiWorkflow<*, *>>
-    ) {
-        val duplicates = workflows
-            .groupingBy { it.name }
-            .eachCount()
-            .filterValues { it > 1 }
-            .keys
+    fun workflows(workflows: Collection<KiwiWorkflow<*, *>>) {
+        val names = HashSet<String>(workflows.size)
 
-        check(duplicates.isEmpty()) {
-            "Duplicate workflow names in input: ${duplicates.joinToString()}"
-        }
+        for (workflow in workflows) {
+            check(names.add(workflow.name)) {
+                "Duplicate workflow name '${workflow.name}' in input."
+            }
 
-        for (wf in workflows) {
-            check(!this.workflows.containsKey(wf.name)) {
-                "Workflow '${wf.name}' is already registered."
+            check(workflow.name !in this.workflows) {
+                "Workflow '${workflow.name}' is already registered."
             }
         }
 
-        workflows.forEach(::registerWorkflow)
+        workflows.forEach { workflow ->
+            this.workflows[workflow.name] = workflow
+        }
     }
 
     /**
@@ -87,6 +83,7 @@ class KiwiFlowConfig {
                 "Workflow key '${key.name}' does not match workflow key '${workflow.name}'."
             }
         }
+
         this.workflows(workflows.values)
     }
 
@@ -104,11 +101,12 @@ class KiwiFlowConfig {
                 "Workflow name '$name' does not match workflow name '${workflow.name}'."
             }
         }
+
         this.workflows(workflows.values)
     }
 
     /**
-     * Returns an immutable snapshot of registered workflows mapped by typed key.
+     * Returns a snapshot of registered workflows mapped by typed key.
      */
     fun registeredWorkflows(): Map<KiwiWorkflowKey<*, *>, KiwiWorkflow<*, *>> =
         workflows.values.associateBy { it.key }
@@ -132,9 +130,10 @@ class KiwiFlowConfig {
     }
 
     private fun registerWorkflow(workflow: KiwiWorkflow<*, *>) {
-        check(!workflows.containsKey(workflow.name)) {
+        check(workflow.name !in workflows) {
             "Workflow '${workflow.name}' is already registered."
         }
+
         workflows[workflow.name] = workflow
     }
 }

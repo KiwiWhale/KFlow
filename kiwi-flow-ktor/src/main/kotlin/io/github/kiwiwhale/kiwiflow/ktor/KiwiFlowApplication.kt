@@ -11,6 +11,8 @@ internal val KiwiFlowApplicationKey =
 
 /**
  * Read-only facade over the Core workflow registry.
+ *
+ * Provides access to workflows registered in the Ktor application.
  */
 class KiwiFlowApplication internal constructor(
     private val registry: KiwiWorkflowRegistry
@@ -22,28 +24,25 @@ class KiwiFlowApplication internal constructor(
     val isEmpty: Boolean
         get() = registry.isEmpty
 
-    fun keys(): Set<String> =
-        registry.keys()
+    val keys: Set<String>
+        get() = registry.keys
 
-    operator fun contains(
-        key: KiwiWorkflowKey<*, *>
-    ): Boolean =
-        key in registry
+    val values: Collection<KiwiWorkflow<*, *>>
+        get() = registry.values
+
+    operator fun contains(key: KiwiWorkflowKey<*, *>): Boolean =
+        registry.contains(key)
 
     operator fun contains(name: String): Boolean =
-        name in registry
+        registry.contains(name)
 
-    operator fun get(
-        key: KiwiWorkflowKey<*, *>
-    ): KiwiWorkflow<*, *> =
+    operator fun get(key: KiwiWorkflowKey<*, *>): KiwiWorkflow<*, *> =
         registry[key]
 
     operator fun get(name: String): KiwiWorkflow<*, *>? =
         registry[name]
 
-    fun getOrNull(
-        key: KiwiWorkflowKey<*, *>
-    ): KiwiWorkflow<*, *>? =
+    fun getOrNull(key: KiwiWorkflowKey<*, *>): KiwiWorkflow<*, *>? =
         registry.getOrNull(key)
 
     fun getOrNull(name: String): KiwiWorkflow<*, *>? =
@@ -52,9 +51,8 @@ class KiwiFlowApplication internal constructor(
     fun <I, O> workflow(
         key: KiwiWorkflowKey<I, O>
     ): KiwiWorkflow<I, O> =
-        registry[key]
+        registry.workflow(key)
 
-    @Suppress("UNCHECKED_CAST")
     fun <I, O> workflow(name: String): KiwiWorkflow<I, O> =
         registry.workflow(name)
 }

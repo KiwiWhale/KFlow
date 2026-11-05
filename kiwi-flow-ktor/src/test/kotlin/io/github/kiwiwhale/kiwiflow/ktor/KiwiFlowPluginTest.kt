@@ -13,7 +13,7 @@ class KiwiFlowPluginTest {
             install(KiwiFlowPlugin)
 
             assertEquals(0, kiwiFlow.size)
-            assertEquals(emptySet(), kiwiFlow.keys())
+            assertEquals(emptySet(), kiwiFlow.keys)
         }
     }
 }

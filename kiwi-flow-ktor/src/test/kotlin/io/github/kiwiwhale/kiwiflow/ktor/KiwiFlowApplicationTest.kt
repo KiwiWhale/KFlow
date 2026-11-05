@@ -36,7 +36,7 @@ class KiwiFlowApplicationTest {
 
             assertEquals(
                 setOf("Test"),
-                kiwiFlow.keys()
+                kiwiFlow.keys
             )
         }
     }

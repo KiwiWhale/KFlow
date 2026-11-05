@@ -1,6 +1,7 @@
 package io.github.kiwiwhale.kiwiflow.ktor
 
 import io.github.kiwiwhale.kiwiflow.core.KiwiFlow
+import io.github.kiwiwhale.kiwiflow.core.workflow.KiwiWorkflowKey
 import io.ktor.server.application.install
 import io.ktor.server.testing.testApplication
 import kotlin.test.Test
@@ -30,7 +31,7 @@ class KiwiFlowPluginRegistrationTest {
 
             assertEquals(
                 setOf("Hello"),
-                kiwiFlow.keys()
+                kiwiFlow.keys
             )
         }
     }
@@ -49,7 +50,7 @@ class KiwiFlowPluginRegistrationTest {
 
             assertEquals(
                 setOf("Hello", "Payment"),
-                kiwiFlow.keys()
+                kiwiFlow.keys
             )
 
             assertEquals(2, kiwiFlow.size)
@@ -63,8 +64,8 @@ class KiwiFlowPluginRegistrationTest {
                 workflow("Hello", helloWorkflow)
             }
 
-            val result =
-                kiwiFlow.workflow<String, String>("Hello")
+            val key = KiwiWorkflowKey<String, String>("Hello")
+            val result = kiwiFlow.workflow(key)
 
             assertEquals(
                 "Hello Ktor",

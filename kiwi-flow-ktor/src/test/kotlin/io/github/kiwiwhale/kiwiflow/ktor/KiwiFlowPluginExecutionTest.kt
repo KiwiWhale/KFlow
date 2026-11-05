@@ -1,6 +1,7 @@
 package io.github.kiwiwhale.kiwiflow.ktor
 
 import io.github.kiwiwhale.kiwiflow.core.KiwiFlow
+import io.github.kiwiwhale.kiwiflow.core.workflow.KiwiWorkflowKey
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.server.application.install
@@ -18,6 +19,9 @@ class KiwiFlowPluginExecutionTest {
             "Hello $input"
         }
 
+    private val helloWorkflowKey =
+        KiwiWorkflowKey<String, String>("Hello")
+
     @Test
     fun `등록된 Workflow를 HTTP 요청에서 실행한다`() = testApplication {
         application {
@@ -30,7 +34,7 @@ class KiwiFlowPluginExecutionTest {
                     val name = call.parameters["name"]!!
 
                     val result = call.application.kiwiFlow
-                        .workflow<String, String>("Hello")
+                        .workflow(helloWorkflowKey)
                         .execute(name)
 
                     call.respondText(result)
@@ -58,7 +62,7 @@ class KiwiFlowPluginExecutionTest {
                     val name = call.parameters["name"]!!
 
                     val result = call.application.kiwiFlow
-                        .workflow<String, String>("Hello")
+                        .workflow(helloWorkflowKey)
                         .execute(name)
 
                     call.respondText(result)

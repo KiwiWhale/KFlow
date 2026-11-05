@@ -55,7 +55,7 @@ class KiwiFlowPluginIsolationTest {
 
                 assertEquals(
                     setOf("First"),
-                    kiwiFlow.keys()
+                    kiwiFlow.keys
                 )
             }
         }
@@ -68,7 +68,7 @@ class KiwiFlowPluginIsolationTest {
 
                 assertEquals(
                     setOf("Second"),
-                    kiwiFlow.keys()
+                    kiwiFlow.keys
                 )
             }
         }
