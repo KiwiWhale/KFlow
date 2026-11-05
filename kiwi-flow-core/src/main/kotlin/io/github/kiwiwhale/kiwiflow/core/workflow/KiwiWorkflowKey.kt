@@ -18,11 +18,6 @@ class KiwiWorkflowKey<I, O>(
 
     val id: RegistryId = RegistryId(NAMESPACE, name)
 
-    internal val registryKey: RegistryKey<String, KiwiWorkflow<*, *>> =
-        RegistryKey.simple(
-            RegistryId(NAMESPACE, "workflows")
-        )
-
     init {
         require(name.isNotBlank()) {
             "Workflow name cannot be blank."

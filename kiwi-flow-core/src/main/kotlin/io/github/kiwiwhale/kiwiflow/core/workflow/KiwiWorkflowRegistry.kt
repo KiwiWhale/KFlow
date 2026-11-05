@@ -20,43 +20,39 @@ class KiwiWorkflowRegistry(
     val isEmpty: Boolean
         get() = registry.isEmpty
 
-    @Suppress("UNCHECKED_CAST")
-    operator fun <I, O> get(
-        key: KiwiWorkflowKey<I, O>
-    ): KiwiWorkflow<I, O> =
-        get(key.name) as KiwiWorkflow<I, O>
+    val keys: Set<String>
+        get() = registry.keys
 
-    operator fun get(name: String): KiwiWorkflow<*, *>? =
-        registry[name]
+    val values: Collection<KiwiWorkflow<*, *>>
+        get() = registry.values
 
-    fun getOrNull(
-        key: KiwiWorkflowKey<*, *>
-    ): KiwiWorkflow<*, *>? =
-        registry.getOrNull(key.name)
-
-    fun getOrNull(name: String): KiwiWorkflow<*, *>? =
-        registry.getOrNull(name)
-
-    operator fun contains(
-        key: KiwiWorkflowKey<*, *>
-    ): Boolean =
+    operator fun contains(key: KiwiWorkflowKey<*, *>): Boolean =
         key.name in registry
 
     operator fun contains(name: String): Boolean =
         name in registry
 
-    fun keys(): Set<String> =
-        registry.keys
+    operator fun get(key: KiwiWorkflowKey<*, *>): KiwiWorkflow<*, *> =
+        registry[key.name]
+            ?: throw NoSuchElementException("Workflow '${key.name}' is not registered.")
 
-    fun values(): Collection<KiwiWorkflow<*, *>> =
-        registry.values
+    operator fun get(name: String): KiwiWorkflow<*, *>? =
+        registry[name]
 
+    fun getOrNull(key: KiwiWorkflowKey<*, *>): KiwiWorkflow<*, *>? =
+        registry.getOrNull(key.name)
+
+    fun getOrNull(name: String): KiwiWorkflow<*, *>? =
+        registry.getOrNull(name)
+
+    @Suppress("UNCHECKED_CAST")
     fun <I, O> workflow(
         key: KiwiWorkflowKey<I, O>
     ): KiwiWorkflow<I, O> =
-        get(key)
+        get(key) as KiwiWorkflow<I, O>
 
     @Suppress("UNCHECKED_CAST")
     fun <I, O> workflow(name: String): KiwiWorkflow<I, O> =
-        get(name) as KiwiWorkflow<I, O>
+        registry[name] as? KiwiWorkflow<I, O>
+            ?: throw NoSuchElementException("Workflow '$name' is not registered.")
 }
